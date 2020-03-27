@@ -34,9 +34,10 @@ clean:
 ifneq ($(OS),win)
 dist: all
 	mkdir plip
-	mkdir plip/bin
-	git archive -o plip/plip-src.tar HEAD
-	xz plip/plip-src.tar
+	mkdir plip/bin plip/src
+	git archive -o plip/src/plip-src.tar HEAD
+	xz plip/src/plip-src.tar
+	cp deps/fftw-$(FFTW_VERSION).tar.gz plip/src/
 	$(MAKE) install PREFIX="$$PWD/plip"
 	mv plip/lib/plip-gui plip/gui
 	rmdir plip/lib
@@ -49,8 +50,9 @@ dist: all
 else
 dist: all
 	mkdir plip
-	mkdir plip/bin
-	git archive -o plip/plip-src.zip HEAD
+	mkdir plip/bin plip/src
+	git archive -o plip/src/plip-src.zip HEAD
+	cp deps/fftw-$(FFTW_VERSION).tar.gz plip/src/
 	cp monitor/obs/obs-plip-monitor.dll plip/
 	cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll deps/pcre/.libs/libpcre-1.dll plip/bin/
 	
