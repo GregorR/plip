@@ -11,8 +11,12 @@ endif
 
 ifeq ($(OS),win)
 THREADS=-lpthread
+THREADS_STATIC=-Wl,-Bstatic -lpthread -Wl,-Bdynamic
+MWINDOWS=-mwindows
 else
 THREADS=-pthread
+THREADS_STATIC=$(THREADS)
+MWINDOWS=
 endif
 
 LIBS=../deps/gc/gc.a $(PCRE) $(THREADS)
@@ -26,9 +30,10 @@ EXES= \
 	plip-marktofilter$(EXE_EXT) \
 	plip-clip$(EXE_EXT) \
 	plip-mix$(EXE_EXT) \
-	plip-defconfig$(EXE_EXT)
+	plip-defconfig$(EXE_EXT) \
+	plip-gui$(EXE_EXT)
 
-all: $(EXES) plip-gui$(EXE_EXT)
+all: $(EXES)
 
 plip$(EXE_EXT): plip-launcher$(EXE_EXT)
 	cp $< $@
@@ -47,9 +52,16 @@ plip-speexdenoise$(EXE_EXT): speexdenoise.c
 		../deps/speexdsp/libspeexdsp/.libs/libspeexdsp.a -lm \
 		-o $@
 
+plip-gui$(EXE_EXT): gui.c
+	$(CC) -std=c99 $(CFLAGS) -DNO_PCRE $(MWINDOWS) \
+		$< ../share/cscript.c \
+		-I ../share -I ../deps/gc/include \
+		../deps/gc/gc.a $(THREADS_STATIC) \
+		-o $@
+
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	for i in $(EXES); do install -s $$i $(DESTDIR)$(PREFIX)/bin/$$i; done
 
 clean:
-	rm -f $(EXES) plip-launcher$(EXE_EXT) plip-gui$(EXE_EXT)
+	rm -f $(EXES) plip-launcher$(EXE_EXT)

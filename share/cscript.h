@@ -21,7 +21,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef NO_PCRE
 #include <pcre.h>
+#endif
 
 #include "gc.h"
 #include "cord.h"

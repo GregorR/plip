@@ -24,6 +24,7 @@ gui/gui:
 
 install:
 	cd processing ; $(MAKE) install
+	cd gui ; $(MAKE) install
 
 clean:
 	cd deps ; $(MAKE) clean
@@ -37,9 +38,10 @@ dist: all
 	git archive -o plip/plip-src.tar HEAD
 	xz plip/plip-src.tar
 	$(MAKE) install PREFIX="$$PWD/plip"
+	mv plip/lib/plip-gui plip/gui
+	rmdir plip/lib
+	mv plip/bin/plip-gui plip/
 	cp monitor/obs/obs-plip-monitor.so plip/
-	cp processing/plip-gui plip/
-	cp -a gui/out/plip-gui* plip/gui
 	cat gui/LICENSE gui/out/plip-gui*/LICENSE > plip/gui/LICENSE
 	tar -Jcf plip-$(PLIP_VERSION)-$(DIST_OS).tar.xz plip/
 	rm -rf plip/
@@ -51,8 +53,10 @@ dist: all
 	git archive -o plip/plip-src.zip HEAD
 	cp monitor/obs/obs-plip-monitor.dll plip/
 	cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll deps/pcre/.libs/libpcre-1.dll plip/bin/
-	$(CROSS_PREFIX)strip processing/*.exe
+	
 	cp processing/*.exe plip/bin/
+	$(CROSS_PREFIX)strip plip/bin/*.exe
+	mv plip/bin/plip-gui.exe plip/
 	cp -a gui/out/plip-gui* plip/gui
 	cat gui/LICENSE gui/out/plip-gui*/LICENSE > plip/gui/LICENSE
 	

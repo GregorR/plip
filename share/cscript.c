@@ -32,7 +32,9 @@
 #include <sys/wait.h>
 #endif
 
+#ifndef NO_PCRE
 #include <pcre.h>
+#endif
 
 #include "cscript.h"
 
@@ -632,6 +634,7 @@ bool csc_wait(int fd)
 #undef BUFSZ
 }
 
+#ifndef NO_PCRE
 // Match a string against a regex. Returns all matches as an array.
 CORD *csc_match(CORD pattern, CORD input)
 {
@@ -673,6 +676,7 @@ CORD *csc_match(CORD pattern, CORD input)
 
     return ret;
 }
+#endif
 
 // Split input by line
 CORD *csc_lines(CORD input)
@@ -724,6 +728,7 @@ CORD *csc_lines(CORD input)
     return ret;
 }
 
+#ifndef NO_PCRE
 // Select lines matching the given PCRE regex
 CORD *csc_grep(CORD pattern, CORD input)
 {
@@ -777,3 +782,4 @@ CORD *csc_grep(CORD pattern, CORD input)
 
     return ret;
 }
+#endif
