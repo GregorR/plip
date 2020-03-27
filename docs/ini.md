@@ -78,9 +78,9 @@ Defines the steps to be performed in processing.
 
 ## noiser
 
-Set to `y` or `n` to perform or not to perform noise reduction, respectively.
-Default `n`. May be refined by track. The noise reducer built into plip is
-SpeexDSP, which isn't very satisfactory.
+Noise reduction engine to use, or blank for no noise reduction. May be
+`noiserepellent`, `speex`, or blank. Default `noiserepellent`. May be defined
+by track.
 
 ## aproc
 
