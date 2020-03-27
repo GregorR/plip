@@ -1,7 +1,7 @@
 {
   "name": "plip-gui",
   "productName": "plip-gui",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A GUI for plip",
   "main": "src/index.js",
   "scripts": {
