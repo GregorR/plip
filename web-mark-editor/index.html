@@ -1,0 +1,198 @@
+<!doctype html>
+<!--
+ * Copyright (c) 2020 Gregor Richards
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+
+        <title>plip mark editor</title>
+
+        <style type="text/css">
+            body {
+                font-family: monospace;
+                background-color: #111;
+                color: #ddd;
+                font-size: 1.25em;
+            }
+
+            .left {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 22rem;
+                background-color: #111;
+            }
+
+            #marks {
+                position: fixed;
+                left: 1rem;
+                width: 20rem;
+            }
+
+            .top {
+                position: fixed;
+                text-align: center;
+                left: 23rem;
+                top: 1rem;
+                right: 1rem;
+            }
+
+            .view {
+                position: fixed;
+                left: 23rem;
+                top: 4rem;
+                right: 1rem;
+                bottom: 148px;
+            }
+
+            #media {
+                width: 100%;
+                height: 100%;
+            }
+
+            #waveform {
+                position: fixed;
+                left: 23rem;
+                right: 1rem;
+                bottom: 10px;
+                height: 128px;
+            }
+
+            #help {
+                position: fixed;
+                left: 1rem;
+                top: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+                background-color: #111;
+                border: 2px solid black;
+                overflow: auto;
+            }
+
+            #jump {
+                position: fixed;
+                left: 1rem;
+                top: 1rem;
+                right: 1rem;
+                margin: 5% auto;
+                padding: 1rem;
+                text-align: center;
+                background-color: #111;
+                border: 2px solid black;
+            }
+        </style>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/2.0.6/wavesurfer.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/2.0.6/plugin/wavesurfer.regions.min.js"></script>
+    </head>
+    <body>
+        <div class="left"></div>
+
+        <div id="marks"></div>
+
+        <div class="top">
+            <div id="speed">1x</div>
+            <div id="totalTime"></div>
+            <div id="debug"></div>
+        </div>
+
+        <div class="view">
+            <video controls src="/media.mp4" id="media"></video>
+        </div>
+
+        <div id="waveform"></div>
+
+        <div id="help" style="display: none">
+            <h1>Help</h1>
+
+            This is the plip mark editor. It allows you to edit the plip marks
+            which are then used to clip the video. This is not intended to be a
+            full non-linear video editor; it simplifies the task of selecting
+            which portions of a video are worth preserving at all, without
+            introducing the complication of effects, reording, etc.<br/><br/>
+
+            <h2>Controls</h2>
+
+            <table border><tbody>
+                <tr><th>Key(s)</th><th>Action</th></tr>
+                <tr><td>/</td><td>Open/close this help</td></tr>
+                <tr><td>K<br/>Space</td><td>Pause or resume playback</td></tr>
+                <tr><td>J<br/>Left</td><td>Scrub left slowly</td></tr>
+                <tr><td>L<br/>Right</td><td>Scrub left more quickly</td></tr>
+                <tr><td>H</td><td>Scrub left at a moderate rate</td></tr>
+                <tr><td>;</td><td>Scrub right at a moderate rate</td></tr>
+                <tr><td>Shift+J<br/>Shift+Left</td><td>Scrub left quickly</td></tr>
+                <tr><td>Shift+L<br/>Shift+Right</td><td>Scrub right quickly</td></tr>
+                <tr><td>Shift+H</td><td>Scrub left very quickly</td></tr>
+                <tr><td>Shift+;</td><td>Scrub right very quickly</td></tr>
+                <tr><td>I<br/>Up</td><td>Seek to the previous mark</td></tr>
+                <tr><td>,<br/>Down</td><td>Seek to the next mark</td></tr>
+                <tr><td>P</td><td>Jump to a segment by number</td></tr>
+                <tr><td>0-9</td><td>Seek to n*10% of the video</td></tr>
+                <tr><td>U<br/>-</td><td>Decrease playback speed</td></tr>
+                <tr><td>O<br/>+</td><td>Increase playback speed</td></tr>
+                <tr><td>Page up</td><td>Zoom out the waveform</td></tr>
+                <tr><td>Page down</td><td>Zoom in the waveform</td></tr>
+                <tr><td>D</td>
+                    <td>
+                        Delete the mark prior to the cursor. If the mark forms
+                        the beginning of a pair, i.e., 'i' or 'f', then the
+                        matching end will be replaced by a temporary 'x' mark
+                        to remember its position. If the mark froms the end of
+                        a pair, i.e., 'o' or 'n', then it will be moved down to
+                        abut the next mark.
+                    </td></tr>
+                <tr><td>F<br/>Pause</td>
+                    <td>
+                        If the current status is clipped out, then begin
+                        clipping in by introducing an 'i' mark and
+                        corresponding 'o' mark.<br/><br/>
+
+                        If the current status is clipped in, then clip out by
+                        moving or introducing an 'o' mark.<br/><br/>
+
+                        If the current status is fast-forwarding, then resume
+                        normal speed by moving or introducing an 'n'
+                        mark.<br/><br/>
+
+                        If an 'o' or 'n' mark is moved, a temporary 'x' mark
+                        may be left to remember its old position.
+                    </td></tr>
+                <tr><td>S<br/>Print Screen</td>
+                    <td>
+                        If the current status is clipped in, then begin
+                        fast-forward by introducing an 'f' mark and
+                        corresponding 'n' mark.<br/><br/>
+
+                        If the current status is clipped out, then introduce an
+                        'r' (reset) mark.<br/><br/>
+
+                        Otherwise, no effect.
+                    </td></tr>
+                <tr><td>E<br/>Scroll Lock</td><td>Introduce an 'm' (general) mark.</td></tr>
+                <tr><td>V</td><td>Validate marks. This fixes any unmatched pairs, as well as removing 'x' marks.</td></tr>
+            </tbody></table><br/><br/>
+        </div>
+
+        <div id="jump" style="display: none">
+            Jump to <input type="text" id="jumpTo" />/<span id="jumpLimit"></span>
+        </div>
+
+        <script type="text/javascript" src="/wme.js"></script>
+    </body>
+</html>

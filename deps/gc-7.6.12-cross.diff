@@ -1,0 +1,76 @@
+diff -r 9ce7b3ca9e78 Makefile.direct
+--- a/Makefile.direct	Wed Mar 25 19:31:02 2020 -0400
++++ b/Makefile.direct	Wed Mar 25 19:31:18 2020 -0400
+@@ -11,6 +11,8 @@
+ # check-cpp - runs C++ test without adding C++ (and cords) interface to gc.a
+ # cord/de - builds dumb editor based on cords.
+ 
++CROSS_PREFIX=
++
+ ABI_FLAG=
+ # ABI_FLAG should be the cc flag that specifies the ABI.  On most
+ # platforms this will be the empty string.  Possible values:
+@@ -21,18 +23,18 @@
+ # ABI flag for assembler.  On HP/UX this is +A64 for 64 bit
+ # executables.
+ 
+-CC=cc $(ABI_FLAG)
++CC=$(CROSS_PREFIX)gcc $(ABI_FLAG)
+ 
+-CXX=g++ $(ABI_FLAG)
++CXX=$(CROSS_PREFIX)g++ $(ABI_FLAG)
+ # Needed only for "make c++", which adds the c++ interface.
+ 
+-AS=as $(AS_ABI_FLAG)
++AS=$(CROSS_PREFIX)as $(AS_ABI_FLAG)
+ # The above doesn't work with gas, which doesn't run cpp.
+ # Define AS as `gcc -c -x assembler-with-cpp' instead.
+ # Under Irix 6, you have to specify the ABI (-o32, -n32, or -64)
+ # if you use something other than the default ABI on your machine.
+ 
+-LD=ld
++LD=$(CROSS_PREFIX)ld
+ 
+ # Redefining srcdir allows object code for the nonPCR version of the collector
+ # to be generated in different directories.
+@@ -45,6 +47,7 @@
+ CFLAGS_EXTRA=
+ CFLAGS= -O -I$(srcdir)/include -I$(AO_SRC_DIR)/src \
+   -DGC_ATOMIC_UNCOLLECTABLE -DNO_EXECUTE_PERMISSION -DALL_INTERIOR_POINTERS \
++  -DGC_THREADS \
+   $(CFLAGS_EXTRA)
+ 
+ # To build the collector with threads support, add to the above:
+@@ -65,7 +68,7 @@
+ # part of the build process, i.e. on the build machine.  These will usually
+ # be the same as CC and CFLAGS, except in a cross-compilation environment.
+ # Note that HOSTCFLAGS should include any -D flags that affect thread support.
+-HOSTCC=$(CC)
++HOSTCC=gcc
+ HOSTCFLAGS=$(CFLAGS)
+ 
+ # For dynamic library builds, it may be necessary to add flags to generate
+@@ -78,8 +81,8 @@
+ # influencing the collector configuration.
+ 
+ CXXFLAGS= $(CFLAGS)
+-AR= ar
+-RANLIB= ranlib
++AR= $(CROSS_PREFIX)ar
++RANLIB= $(CROSS_PREFIX)ranlib
+ 
+ 
+ OBJS= alloc.o reclaim.o allchblk.o misc.o mach_dep.o os_dep.o mark_rts.o \
+diff -r 9ce7b3ca9e78 include/gc_config_macros.h
+--- a/include/gc_config_macros.h	Wed Mar 25 19:31:02 2020 -0400
++++ b/include/gc_config_macros.h	Wed Mar 25 19:31:18 2020 -0400
+@@ -56,6 +56,9 @@
+ #if defined(USE_LD_WRAP)
+ # define GC_USE_LD_WRAP
+ #endif
++#if defined(_WIN32)
++# define GC_WIN32_PTHREADS
++#endif
+ 
+ #if defined(GC_WIN32_PTHREADS) && !defined(GC_WIN32_THREADS)
+   /* Using pthreads-win32 library (or other Win32 implementation).  */

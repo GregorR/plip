@@ -1,0 +1,156 @@
+<!doctype html>
+<!--
+ * Copyright (c) 2020 Gregor Richards
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self'" />
+        <title>plip</title>
+
+        <style type="text/css">
+            body {
+                background: #001;
+                color: #ddd;
+                font-size: 1.25em;
+                font-family: "Helvetica", sans-serif;
+            }
+
+            a {
+                color: #ada;
+            }
+
+            button, .buttony {
+                background-color: #eee;
+                font-weight: bold;
+                color: #000;
+                margin: 0.2em;
+                appearance: none;
+                transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+                border: 1px solid white;
+                border-radius: 0.5em;
+                cursor: pointer;
+                display: inline-block;
+                min-height: 2em;
+                line-height: 2.95em;
+                padding: 0 1.5em;
+                text-align: center;
+            }
+
+            label {
+                display: inline-block;
+                width: 8em;
+                margin: 0.25em;
+                text-align: right;
+            }
+
+            textarea {
+                background-color: #000;
+                color: #ddd;
+            }
+
+            @keyframes spinner {
+                to {transform: rotate(360deg);}
+            }
+
+            #spinner:before {
+                content: '';
+                box-sizing: border-box;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 4em;
+                height: 4em;
+                margin-top: -2em;
+                margin-left: -2em;
+                border-radius: 50%;
+                border: 0.4em solid #ccc;
+                border-top-color: #333;
+                animation: spinner 1s linear infinite;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="spinner" style="display:none"></div>
+
+        <!-- The only always-visible part of the UI is the input file -->
+        <label for="input">Input file:</label>
+        <span id="inputBox">
+        <input type="file" id="input" />
+        </span><br/><br/>
+
+        <!-- The output "pane" is visible above the details when we're processing -->
+        <div id="outputBox" style="display:none">
+            <button id="outputBoxClose" style="float: right">X</button>
+            <progress id="progress" max=100 value=0 style="width: 100%"></progress>
+            <textarea style="width: 100%" rows=25 id="output" readonly></textarea>
+        </div>
+
+        <!-- The details pane is essentially the main pane -->
+        <div id="details" style="display:none">
+            <hr/><br/>
+
+            <label for="outdir">Output directory:</label><input type="file" webkitdirectory id="outdir" /><br/><br/>
+
+            <label for="config">Configuration:</label>
+            <select id="config">
+                <option value="default">Default</option>
+                <option value="select">Select a file</option>
+            </select>
+            <button id="editButton">Edit</button>
+            <br/><br/>
+
+            <div id="configFileBox" style="display:none">
+                <label for="configFile">Configuration file:</label><input type="file" id="configFile" /><br/><br/>
+            </div>
+
+            <hr/><br/>
+
+            Steps to perform:<br/>
+            <table><tbody id="steps"></tbody></table>
+
+            <button id="process">Process</button><br/><br/>
+
+            <hr/><br/>
+
+            <h2>Tracks</h2>
+            <div id="tracks"></div>
+
+            <hr/><br/>
+
+            <h2>Advanced</h2>
+            <button id="delete">Delete processed files</button><br/>
+            <div id="deleteSureBox" style="display: none">
+            Are you sure?<br/>
+            <button id="deleteSureYes">Yes</button>
+            <button id="deleteSureNo">No</button>
+            </div><br/><br/>
+
+            <label for="mixOptions">Final mix options:</label><br/>
+            <textarea id="mixOptions" style="width: 100%" rows=1></textarea>
+        </div>
+
+        <!-- Our "text editor" for configuration files -->
+        <div id="editorBox" style="display:none">
+            <button id="configSave">Save configuration</button>
+            <button id="configCancel">Cancel changes</button><br/>
+
+            <textarea style="width: 100%" rows=25 id="editor"></textarea>
+        </div>
+
+        <script type="text/javascript" src="plip.js"></script>
+    </body>
+</html>

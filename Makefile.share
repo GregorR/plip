@@ -1,0 +1,23 @@
+PLIP_VERSION=0.4
+FFMPEG_VERSION=4.2.2
+DESTDIR=
+PREFIX=/opt/plip
+
+CROSS_COMPILE=
+
+ifeq ($(CROSS_COMPILE),)
+CROSS_PREFIX=
+else
+CROSS_PREFIX=$(CROSS_COMPILE)-
+endif
+
+OS=unix
+
+ifneq ($(findstring mingw,$(CROSS_COMPILE)),)
+OS=win
+endif
+
+CC=$(CROSS_PREFIX)gcc
+CXX=$(CROSS_PREFIX)g++
+CFLAGS=-O3 -g
+CXXFLAGS=-O3 -g
