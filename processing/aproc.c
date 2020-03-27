@@ -83,6 +83,7 @@ void *aproc(void *vat)
 
     CORD noiserFile = csc_absolute(csc_casprintf("%r-noiser.%r", base, iformat));
     CORD outFile = csc_absolute(csc_casprintf("%r-proc.%r", base, iformat));
+    CORD noiser = csc_configRead(csc_configTree, "steps.noiser", base, NULL);
 
     // If we're already done, we're already done!
     if (csc_fileExists(outFile)) {
@@ -92,22 +93,27 @@ void *aproc(void *vat)
     }
 
     // Do noise reduction if asked
-    if (csc_configBool(csc_configTree, "steps.noiser", base)) {
+    if (CORD_cmp(noiser, NULL)) {
+        char *program = CORD_to_char_star(csc_casprintf("plip-%rdenoise", noiser));
+        char *format = "s16le";
+        if (!CORD_cmp(noiser, "noiserepellent"))
+            format = "f32le";
+
         // Perform noise reduction
         if (!csc_fileExists(noiserFile)) {
             // Set up the pipeline
             int aud1 = csc_runpl(-1,
                 ffmpeg,
                 "-i", input,
-                "-f", "s16le", "-ac", "2", "-ar", "48000",
+                "-f", format, "-ac", "2", "-ar", "48000",
                 "-", NULL);
             int noiseRed = csc_runpl(aud1,
-                "plip-speexdenoise", "2", NULL);
+                program, "2", NULL);
             int aud2 = csc_runpl(noiseRed,
                 ffmpeg,
-                "-f", "s16le", "-ac", "2", "-ar", "48000", "-i", "-",
+                "-f", format, "-ac", "2", "-ar", "48000", "-i", "-",
                 "-c:a", icodec,
-                noiserFile, NULL);
+                CORD_to_char_star(noiserFile), NULL);
             csc_wait(aud2);
         }
 

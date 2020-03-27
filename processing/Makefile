@@ -26,6 +26,7 @@ EXES= \
 	plip-demux$(EXE_EXT) \
 	plip-findnoise$(EXE_EXT) \
 	plip-speexdenoise$(EXE_EXT) \
+	plip-noiserepellentdenoise$(EXE_EXT) \
 	plip-aproc$(EXE_EXT) \
 	plip-marktofilter$(EXE_EXT) \
 	plip-clip$(EXE_EXT) \
@@ -50,6 +51,15 @@ plip-speexdenoise$(EXE_EXT): speexdenoise.c
 		-I ../deps/speexdsp/include \
 		speexdenoise.c \
 		../deps/speexdsp/libspeexdsp/.libs/libspeexdsp.a -lm \
+		-o $@
+
+plip-noiserepellentdenoise$(EXE_EXT): noiserepellentdenoise.c
+	$(CC) -std=c99 $(CFLAGS) \
+		-I ../deps/noise-repellent/src \
+		noiserepellentdenoise.c \
+		../deps/noise-repellent/src/libnr.a \
+		../deps/fftw/.libs/libfftw3f.a \
+		-lm \
 		-o $@
 
 plip-gui$(EXE_EXT): gui.c

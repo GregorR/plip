@@ -25,6 +25,7 @@ processing/plip-demux
 processing/plip-findnoise
 processing/plip-gui
 processing/plip-launcher
+processing/plip-noiserepellentdenoise
 processing/plip-marktofilter
 processing/plip-mix
 processing/plip-speexdenoise
@@ -35,6 +36,7 @@ processing/plip-demux.exe
 processing/plip-findnoise.exe
 processing/plip-gui.exe
 processing/plip-launcher.exe
+processing/plip-noiserepellentdenoise.exe
 processing/plip-marktofilter.exe
 processing/plip-mix.exe
 processing/plip-speexdenoise.exe
@@ -84,3 +86,7 @@ deps/speexdsp/libspeexdsp/testecho.exe
 deps/speexdsp/libspeexdsp/testjitter.exe
 deps/speexdsp/libspeexdsp/testresample.exe
 deps/speexdsp/libspeexdsp/testresample2.exe
+
+# fftw:
+deps/fftw/
+deps/fftw-*.tar.gz
