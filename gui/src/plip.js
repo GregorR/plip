@@ -600,8 +600,10 @@
             let markFile = filePath.replace(/\.[^\.]*$/, ".mark");
 
             // But first, we need to mix
-            await mix(dirPath + path.sep + "tmp.mp4", {min: 200/stepCt, max: 300/stepCt, count: 4}, {
+            await mix(tmpMP4, {min: 200/stepCt, max: 300/stepCt, count: 4}, {
                 title: "Preparing editable file...",
+                video: filePath,
+                audioState: "proc",
                 mixOptions: "-c:v libx264 -c:a aac -crf 23 -threads 0 -preset ultrafast -b:a 128k",
                 args: ["-V", "scale=-1:720"]
             });
@@ -620,7 +622,9 @@
                 await run("Making audio waveform...", formats.audiowaveform,
                         ["-i", tmpFLAC, "--pixels-per-second", "64", "-b", "8", "-o", tmpJSON],
                         {min: 250/stepCt, max: 300/stepCt, count: 2});
-                fs.unlinkSync(tmpFLAC);
+                try {
+                    fs.unlinkSync(tmpFLAC);
+                } catch (ex) {}
             }
 
             // Then launch the actual editor
@@ -702,21 +706,28 @@
 
         // Then the input video
         let vid = null;
-        streams.forEach((stream) => {
-            if (stream.type !== "Video" || !stream.included)
-                return;
-            if (!vid)
-                vid = stream.title + "." + formats.vformat;
-        });
+        if (config.video)
+            vid = config.video;
+        else {
+            streams.forEach((stream) => {
+                if (stream.type !== "Video" || !stream.included)
+                    return;
+                if (!vid)
+                    vid = dirPath + path.sep + stream.title + "." + formats.vformat;
+            });
+        }
         if (!vid)
             return; // FIXME
         args.push(vid);
 
         // Then the input audio
+        let asuffix = "." + formats.aformat;
+        if (config.audioState === "proc")
+            asuffix = "-proc." + formats.aiformat;
         streams.forEach((stream) => {
             if (stream.type !== "Audio" || !stream.included)
                 return;
-            args.push(stream.title + "." + formats.aformat);
+            args.push(dirPath + path.sep + stream.title + asuffix);
         });
 
         // Then perform the call
@@ -754,8 +765,6 @@
                 cwd: dirPath,
                 stdio: ["ignore", "pipe", "pipe"],
             });
-
-            p.on("error", rej);
 
             function onData(chunk) {
                 chunk = chunk.toString("utf8");
@@ -812,10 +821,17 @@
             });
 
             p.on("exit", function(code, signal) {
+                if (exitCode !== null) return;
                 if (code !== null)
                     exitCode = code;
                 else
                     exitCode = signal;
+                maybeFinish();
+            });
+
+            p.on("error", function(err) {
+                if (exitCode !== null) return;
+                exitCode = err;
                 maybeFinish();
             });
 

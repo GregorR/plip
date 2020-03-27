@@ -61,7 +61,12 @@
     geid("waveform").style.backgroundColor = grey;
 
     // Load our waveform data
-    let waveform = JSON.parse(fs.readFileSync(config.waveform, "utf8"));
+    let waveform = null;
+    try {
+        waveform = JSON.parse(fs.readFileSync(config.waveform, "utf8"));
+    } catch (ex) {
+        alert("Error opening waveform file!");
+    }
     let waveformDiv = 1 << (waveform.bits-1);
 
     // We assume we've got too much wave for wavesurfer, so divide it into 10-minute chunks
