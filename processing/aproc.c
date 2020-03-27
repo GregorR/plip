@@ -17,6 +17,7 @@
 #define GC_THREADS 1
 #define _POSIX_C_SOURCE 200809L
 
+#include <fcntl.h>
 #include <math.h>
 #include <pthread.h>
 #include <string.h>
@@ -102,11 +103,22 @@ void *aproc(void *vat)
         // Perform noise reduction
         if (!csc_fileExists(noiserFile)) {
             // Set up the pipeline
+#ifdef _WIN32
+            // ffmpeg for Windows doesn't pipeline well
+            char *inter = CORD_to_char_star(csc_absolute(csc_casprintf("%r-noiserin.raw", base)));
+            csc_runl(0, NULL,
+                ffmpeg,
+                "-i", input,
+                "-f", format, "-ac", "2", "-ar", "48000",
+                inter, NULL);
+            int aud1 = open(inter, O_RDONLY|O_BINARY);
+#else
             int aud1 = csc_runpl(-1,
                 ffmpeg,
                 "-i", input,
                 "-f", format, "-ac", "2", "-ar", "48000",
                 "-", NULL);
+#endif
             int noiseRed = csc_runpl(aud1,
                 program, "2", NULL);
             int aud2 = csc_runpl(noiseRed,
@@ -115,6 +127,9 @@ void *aproc(void *vat)
                 "-c:a", icodec,
                 CORD_to_char_star(noiserFile), NULL);
             csc_wait(aud2);
+#ifdef _WIN32
+            unlink(inter);
+#endif
         }
 
     } else {
