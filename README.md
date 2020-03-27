@@ -35,6 +35,14 @@ plip is based heavily (in essence, entirely) on ffmpeg ( https://ffmpeg.org ),
 which does all the heavy lifting. plip itself just organizes the tasks.
 
 
+## Dependencies
+
+All dependencies are included in the Windows ZIP file.
+
+plip depends on `ffmpeg`, `ffprobe`, and `audiowaveform` being available in
+`$PATH`.
+
+
 ## GUI
 
 plip's GUI is optional, but of course, for users accustomed to a graphical user
@@ -120,3 +128,13 @@ processing, editing, clipping, and mixing. Demuxing is performed by
 mixing by `plip-mix`. See the `--help` output from any of these tools for
 usage. As mark editing is a fundamentally visual task, it is only supported
 through the GUI.
+
+To launch the editor directly, use `plip-gui -e <media file> <waveform file>
+<input marks> [output marks]`. The media file must be in MP4. For instance, to
+make a tmp.mp4 from out.mkv and audio1-proc.flac: `plip-mix -V scale=-1:720 -o
+-c:v libx264 -c:a aac -crf 23 -threads 0 -preset ultrafast -b:a 128k ';'
+tmp.mp4 out.mkv audio1-proc.flac`. The waveform file must be made by
+audiowaveform. For instance, to make a tmp.json waveform file from a tmp.flac
+audio file: `audiowaveform -i tmp.flac --pixels-per-second 64 -b 8 -o
+tmp.json`. To make tmp.flac from tmp.mp4: `ffmpeg -i tmp.mp4 -map 0:a
+tmp.flac`.
