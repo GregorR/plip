@@ -55,10 +55,14 @@ dist: all
 	cp processing/*.exe plip/bin/
 	cp -a gui/out/plip-gui* plip/gui
 	cat gui/LICENSE gui/out/plip-gui*/LICENSE > plip/gui/LICENSE
-	unzip ffmpeg-$(FFMPEG_VERSION)-win64-shared.zip
-	mv ffmpeg-$(FFMPEG_VERSION)-win64-shared/ plip/ffmpeg
+	
+	unzip -d plip/ ffmpeg-$(FFMPEG_VERSION)-win64-shared.zip
+	mv plip/ffmpeg-$(FFMPEG_VERSION)-win64-shared/ plip/ffmpeg
 	mv plip/ffmpeg/bin/* plip/bin/
 	mv plip/ffmpeg/presets plip/
+	
+	unzip -d plip/bin/ audiowaveform-$(AUDIOWAVEFORM_VERSION)-win64.zip
+	
 	rm -f plip-$(PLIP_VERSION)-win.zip
 	zip -r plip-$(PLIP_VERSION)-win.zip plip/
 	rm -rf plip/
