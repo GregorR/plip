@@ -16,6 +16,7 @@
 
 (function() {
     const fs = require("fs");
+    const path = require("path");
 
     const url = new URL(window.location);
     const urlParams = new URLSearchParams(url.search);
@@ -53,16 +54,19 @@
     const yellow = "#220";
 
     // Load our media
-    media.src = config.media;
+    media.src = path.resolve(config.media);
 
     // Create the wavesurfer display
     let wavesurfer = null;
     geid("waveform").style.backgroundColor = grey;
 
+    // Load our waveform data
+    let waveform = JSON.parse(fs.readFileSync(config.waveform, "utf8"));
+    let waveformDiv = 1 << (waveform.bits-1);
+
     // We assume we've got too much wave for wavesurfer, so divide it into 10-minute chunks
-    let waveform = null, waveformDiv = 1, wavesurferOffset = -1, wavesurferDuration = 600;
+    let wavesurferOffset = -1, wavesurferDuration = 600;
     let wavesurferZoom = 64;
-    waveform = JSON.parse(fs.readFileSync(config.waveform, "utf8"));
 
     // A fake media element representing part of the real one, for wavesurfer's sake
     function FakeMediaElement(real, offset, duration) {
@@ -87,6 +91,11 @@
         listener = listener.bind(this);
         if (type === "play") this.playHandler = listener;
         this.real.addEventListener(type, listener);
+    }
+
+    FakeMediaElement.prototype.removeEventListener = function(type, listener, options) {
+        // FIXME
+        return;
     }
 
     FakeMediaElement.prototype.pause = function() {
@@ -144,6 +153,7 @@
         return true;
     }
 
+    media.addEventListener("canplaythrough", updateWavesurfer);
     media.addEventListener("durationchange", updateWavesurfer);
 
     // Utility function to translate seconds into h:m:s
@@ -178,11 +188,15 @@
 
     // Read in the original marks
     (function() {
-        let marksRaw = fs.readFileSync(config.inMarks, "utf8").split("\n");
+        let marksRaw = [];
+        try {
+            marksRaw = fs.readFileSync(config.inMarks, "utf8").split("\n");
+        } catch (ex) {} // input file is allowed to not exist
         marksRaw.forEach((marksLine) => {
             if (marksLine.length)
                 marks.push({"e": marksLine[0], "t": Number(marksLine.slice(1))});
         });
+        updateMarks();
     })();
 
     // Validate that our marks make sense
@@ -717,6 +731,7 @@
                 break;
 
             case 59: // ;
+            case 186: // ;
                 if (ev.shiftKey)
                     autoScrub(30);
                 else
@@ -803,6 +818,10 @@
                 else
                     hlp.style.display = "none";
                 break;
+
+            case 87: // w
+                if (ev.ctrlKey)
+                    window.close();
                 
             default:
                 // Unrecognized
@@ -824,6 +843,7 @@
             case 76: // L
             case 72: // H
             case 59: // ;
+            case 186: // ;
                 if (autoScrubInterval) {
                     clearInterval(autoScrubInterval);
                     autoScrubInterval = null;
@@ -857,6 +877,11 @@
 
         return false;
     });
+
+    // And the help button opens help
+    geid("helpB").onclick = function() {
+        geid("help").style.display = "block";
+    };
 
     window.addEventListener("resize", updateMarks);
 })();

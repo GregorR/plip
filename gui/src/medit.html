@@ -18,6 +18,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self'" />
 
         <title>plip mark editor</title>
 
@@ -25,6 +26,13 @@
             body {
                 font-family: monospace;
                 background-color: #111;
+                color: #ddd;
+                font-size: 1.25em;
+            }
+
+            button {
+                background-color: #111;
+                border-color: #222;
                 color: #ddd;
                 font-size: 1.25em;
             }
@@ -48,6 +56,12 @@
                 position: fixed;
                 text-align: center;
                 left: 23rem;
+                top: 1rem;
+                right: 4rem;
+            }
+
+            .helpB {
+                position: fixed;
                 top: 1rem;
                 right: 1rem;
             }
@@ -95,10 +109,14 @@
                 background-color: #111;
                 border: 2px solid black;
             }
+
+            .wavesurfer-handle {
+                display: none;
+            }
         </style>
 
         <script src="wavesurfer.js"></script>
-        <script src="wavesurfer.regions.min.js"></script>
+        <script src="wavesurfer.regions.js"></script>
     </head>
     <body>
         <div class="left"></div>
@@ -109,6 +127,10 @@
             <div id="speed">1x</div>
             <div id="totalTime"></div>
             <div id="debug"></div>
+        </div>
+
+        <div class="helpB">
+            <button id="helpB">Help</button>
         </div>
 
         <div class="view">
@@ -186,6 +208,7 @@
                     </td></tr>
                 <tr><td>E<br/>Scroll Lock</td><td>Introduce an 'm' (general) mark.</td></tr>
                 <tr><td>V</td><td>Validate marks. This fixes any unmatched pairs, as well as removing 'x' marks.</td></tr>
+                <tr><td>Ctrl+W</td><td>Quit.</td></tr>
             </tbody></table><br/><br/>
         </div>
 

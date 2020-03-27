@@ -18,7 +18,9 @@
     const cp = require("child_process");
     const fs = require("fs");
     const path = require("path");
-    const dialog = require("electron").remote.dialog;
+    const electron = require("electron");
+    const dialog = electron.remote.dialog;
+    const BrowserWindow = electron.remote.BrowserWindow;
 
     const IniFile = require("./plipini.js").IniFile;
 
@@ -42,7 +44,7 @@
     const crRE = /^(.*)\r([^\r]*)$/;
 
     // By default we do everything
-    const defSteps = "dpcm";
+    const defSteps = "dpecm";
 
     // Our default final mix options
     const defOptions = "-c:v libx264 -c:a aac -crf 20 -threads 0 -b:a 128k";
@@ -60,7 +62,7 @@
     let configFileINI = null;
 
     // The steps the GUI should perform
-    const allSteps = ["d", "p", "c", "m"];
+    const allSteps = ["d", "p", "e", "c", "m"];
     let steps = null;
 
     // The formats, extracted from the configuration file
@@ -211,7 +213,7 @@
         displaySteps();
     }
 
-    // Load the formats from the config file
+    // Load the formats and programs from the config file
     function loadFormats() {
         formats = {};
         [
@@ -223,6 +225,10 @@
             let def = formatPair[1];
             formats[format] = configFileINI.getValue("", "formats", format) || def;
         });
+
+        ["ffmpeg", "audiowaveform"].forEach((program) => {
+            formats[program] = configFileINI.getValue("", "programs", program) || program;
+        });
     }
 
     // Display the steps which are en/disabled, with buttons to change it
@@ -231,6 +237,7 @@
         const stepNames = {
             "d": "Demux",
             "p": "Process",
+            "e": "Edit",
             "c": "Clip",
             "m": "Mix"
         };
@@ -251,23 +258,55 @@
             b.innerText = stepNames[step] + " " + (inc?"✓":"✗");
 
             // Now make it change when we click it
-            b.onclick = function() {
-                let newSteps = "";
-                for (let i = 0; i < allSteps.length; i++) {
-                    let newStep = allSteps[i];
-                    newSteps += newStep;
-                    if (newStep === step)
-                        break;
-                }
+            if (step !== "e") {
+                b.onclick = function() {
+                    let newSteps = "";
+                    for (let i = 0; i < allSteps.length; i++) {
+                        let newStep = allSteps[i];
+                        if (newStep === "e") {
+                            if (steps.e)
+                                newSteps += "e";
+                        } else {
+                            newSteps += newStep;
+                        }
+                        if (newStep === step)
+                            break;
+                    }
 
-                // Now write it to the config file
-                configFileINI.update(null, "gui", "steps", newSteps);
-                configFileINI.save((err) => {
-                    if (err) alert("WARNING: Failed to save configuration file!");
-                    loadConfig();
-                });
-            };
+                    updateSteps(newSteps);
+                };
+
+            } else { // Edit step
+                b.onclick = function() {
+                    let newSteps = "";
+                    for (let i = 0; i < allSteps.length; i++) {
+                        let newStep = allSteps[i];
+                        if (newStep === "e") {
+                            if (!steps.e && steps.p)
+                                newSteps += newStep;
+                        } else {
+                            if (steps[newStep])
+                                newSteps += newStep;
+                        }
+                    }
+
+                    updateSteps(newSteps);
+                };
+
+            }
+
         });
+
+        // Update the steps when a button is clicked
+        function updateSteps(newSteps) {
+            // Now write it to the config file
+            configFileINI.update(null, "gui", "steps", newSteps);
+            configFileINI.save((err) => {
+                if (err) alert("WARNING: Failed to save configuration file!");
+                loadConfig();
+            });
+        }
+
     }
 
     gebi("editButton").onclick = function() {
@@ -535,6 +574,10 @@
         });
 
         var stepCt = steps.length;
+        if (steps.c && !steps.e) {
+            // Just to make the progress bar less confusing
+            stepCt++;
+        }
 
         // Step one: Demux
         await run("Demuxing...", "plip-demux", [filePath], {
@@ -548,9 +591,65 @@
             await detectTracks();
         }
 
+        // Step three: Editing
+        if (steps.e) {
+            let tmpBase = dirPath + path.sep + "tmp";
+            let tmpMP4 = tmpBase + ".mp4";
+            let tmpFLAC = tmpBase + ".flac";
+            let tmpJSON = tmpBase + ".json";
+            let markFile = filePath.replace(/\.[^\.]*$/, ".mark");
+
+            // But first, we need to mix
+            await mix(dirPath + path.sep + "tmp.mp4", {min: 200/stepCt, max: 300/stepCt, count: 4}, {
+                title: "Preparing editable file...",
+                mixOptions: "-c:v libx264 -c:a aac -crf 23 -threads 0 -preset ultrafast -b:a 128k",
+                args: ["-V", "scale=-1:720"]
+            });
+
+            // Don't do the waveform conversion if it's already done
+            let exists = false;
+            try {
+                fs.accessSync(tmpJSON);
+                exists = true;
+            } catch (ex) {}
+            if (!exists) {
+                // Extract the audio
+                await run("Making audio waveform...", formats.ffmpeg, ["-i", tmpMP4, "-map", "0:a", tmpFLAC], {min: 225/stepCt, max: 300/stepCt, count: 3});
+
+                // Convert it to a waveform
+                await run("Making audio waveform...", formats.audiowaveform,
+                        ["-i", tmpFLAC, "--pixels-per-second", "64", "-b", "8", "-o", tmpJSON],
+                        {min: 250/stepCt, max: 300/stepCt, count: 2});
+                fs.unlinkSync(tmpFLAC);
+            }
+
+            // Then launch the actual editor
+            let config = {
+                media: tmpMP4,
+                waveform: tmpJSON,
+                inMarks: markFile,
+                outMarks: markFile
+            };
+            await new Promise(function(res, rej) {
+                let editWindow = new BrowserWindow({
+                    width: 1600,
+                    height: 900,
+                    backgroundColor: "#111",
+                    webPreferences: {
+                        nodeIntegration: true
+                    }
+                });
+
+                editWindow.setMenu(null);
+                editWindow.maximize();
+                editWindow.loadURL(`file://${__dirname}/medit.html?c=` + encodeURIComponent(JSON.stringify(config)));
+                editWindow.on("closed", res);
+            });
+        }
+
         // Step three: Clipping
         if (steps.c) {
-            await run("Clipping...", "plip-clip", [filePath], {min: 200/stepCt, max: 300/stepCt, count: clipCt});
+            await run("Clipping...", "plip-clip", [filePath], {min: 300/stepCt, max: 400/stepCt, count: clipCt});
             await detectTracks();
         }
 
@@ -559,7 +658,7 @@
             try {
                 fs.unlinkSync(mixPath);
             } catch (ex) {}
-            await mix(mixPath, {min: 300/stepCt, max: 400/stepCt, count: 1});
+            await mix(mixPath, {min: 400/stepCt, max: 500/stepCt, count: 1});
             await detectTracks();
         }
 
@@ -573,11 +672,12 @@
     }
 
     // Perform the final mix
-    function mix(mixPath, progress) {
+    function mix(mixPath, progress, config) {
         let args = [];
+        config = config || {};
 
         // Form our arguments. First, mix options.
-        let mo = gebi("mixOptions").innerText;
+        let mo = config.mixOptions || gebi("mixOptions").innerText;
         if (mo !== "") {
             // Options to pass through
             args.push("-o");
@@ -592,6 +692,10 @@
 
             args.push(";");
         }
+
+        // Now any extra config arguments
+        if (config.args)
+            args = args.concat(config.args);
 
         // Now the output file
         args.push(mixPath);
@@ -616,7 +720,7 @@
         });
 
         // Then perform the call
-        return run("Mixing...", "plip-mix", args, progress);
+        return run(config.title || "Mixing...", "plip-mix", args, progress);
     }
 
     // Run a command in the background, with output going to outputBox, returning a promise
@@ -771,6 +875,10 @@
             }
         });
 
+        // And delete the editing temporaries
+        del(base + "tmp.mp4");
+        del(base + "tmp.json");
+
         // Deletion helper function
         function del(file) {
             try {
@@ -786,6 +894,12 @@
     gebi("deleteSureNo").onclick = function() {
         gebi("deleteSureBox").style.display = "none";
     };
+
+    // We don't really support keyboard controls, but let ctrl+W quit
+    document.body.addEventListener("keydown", function(ev) {
+        if (ev.keyCode === 87 /* w */ && ev.ctrlKey)
+            window.close();
+    });
 
     // Load in our default config
     if (config.file) {
