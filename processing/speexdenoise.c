@@ -14,17 +14,25 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "arg.h"
+
 #include "speex/speex_preprocess.h"
 
 #include "licenses.h"
 
 #define FRAME_SIZE 960
+
+void usage()
+{
+    fprintf(stderr, "Use: plip-speexdenoise [-i|--input <input file>] [-o|--output <output file>] [channels]\n\n");
+}
 
 int main(int argc, char **argv)
 {
@@ -35,11 +43,59 @@ int main(int argc, char **argv)
     int channels = 1;
     ssize_t rd, total;
     SpeexPreprocessState **sts;
+    char *inFile = NULL, *outFile = NULL;
+    int inFd = 0, outFd = 1;
+
+    ARG_VARS;
 
     fprintf(stderr, "The speexdsp-denoise library used by this software is licensed under the following terms:\n\n%s\n---\n\n", speexdsp_license);
 
-    if (argc > 1)
-        channels = atoi(argv[1]);
+    ARG_NEXT();
+    while (argType) {
+        ARG(h, help) {
+            usage();
+            return 0;
+        } else ARGN(i, input) {
+            ARG_GET();
+            inFile = arg;
+        } else ARGN(o, output) {
+            ARG_GET();
+            outFile = arg;
+        } else ARGN(c, channels) {
+            ARG_GET();
+            channels = atoi(arg);
+        } else if (argType == ARG_VAL) {
+            channels = atoi(arg);
+        } else {
+            usage();
+            return 1;
+        }
+        ARG_NEXT();
+    }
+
+    // Set up I/O
+    if (inFile) {
+        inFd = open(inFile, O_RDONLY
+#ifdef _WIN32
+            |O_BINARY
+#endif
+            );
+        if (inFd < 0) {
+            perror(inFile);
+            return 1;
+        }
+    }
+    if (outFile) {
+        outFd = open(outFile, O_WRONLY|O_CREAT
+#ifdef _WIN32
+            |O_BINARY
+#endif
+            );
+        if (outFd < 0) {
+            perror(outFile);
+            return 1;
+        }
+    }
 
     // Allocate our frames
     frameCt = FRAME_SIZE * channels;
@@ -75,7 +131,7 @@ int main(int argc, char **argv)
         // Read in a frame
         total = 0;
         while (total < frameSz) {
-            rd = read(0, ((char *) rawFrame) + total, frameSz - total);
+            rd = read(inFd, ((char *) rawFrame) + total, frameSz - total);
             if (rd <= 0)
                 break;
             total += rd;
@@ -105,7 +161,7 @@ int main(int argc, char **argv)
         }
 
         // Now output it again
-        write(1, rawFrame, frameSz);
+        write(outFd, rawFrame, frameSz);
     }
 
     for (ci = 0; ci < channels; ci++)

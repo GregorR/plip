@@ -48,14 +48,14 @@ plip-%$(EXE_EXT): %.c ../share/cscript.c hashtable.c configfile.c defconfig.h
 
 plip-speexdenoise$(EXE_EXT): speexdenoise.c
 	$(CC) -std=c99 $(CFLAGS) \
-		-I ../deps/speexdsp/include \
+		-I ../share -I ../deps/speexdsp/include \
 		speexdenoise.c \
 		../deps/speexdsp/libspeexdsp/.libs/libspeexdsp.a -lm \
 		-o $@
 
 plip-noiserepellentdenoise$(EXE_EXT): noiserepellentdenoise.c
 	$(CC) -std=c99 $(CFLAGS) \
-		-I ../deps/noise-repellent/src \
+		-I ../share -I ../deps/noise-repellent/src \
 		noiserepellentdenoise.c \
 		../deps/noise-repellent/src/libnr.a \
 		../deps/fftw/.libs/libfftw3f.a \
