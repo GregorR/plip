@@ -104,26 +104,17 @@ void *aproc(void *vat)
         if (!csc_fileExists(noiserFile)) {
             // Set up the pipeline
 #ifdef _WIN32
-            // ffmpeg for Windows doesn't pipeline well
-            char *inter1 = CORD_to_char_star(csc_absolute(csc_casprintf("%r-noiser1.raw", base)));
-            char *inter2 = CORD_to_char_star(csc_absolute(csc_casprintf("%r-noiser2.raw", base)));
+            // Windows ffmpeg doesn't pipeline well
+            char *inter = CORD_to_char_star(csc_absolute(csc_casprintf("%r-noiser1.raw", base)));
             csc_runl(0, NULL,
                 ffmpeg,
                 "-i", input,
                 "-f", format, "-ac", "2", "-ar", "48000",
-                inter1, NULL);
-            csc_runl(0, NULL,
+                inter, NULL);
+            int aud1 = csc_runpl(-1,
                 program,
-                "-i", inter1,
-                "-o", inter2,
+                "-i", inter,
                 "2", NULL);
-            unlink(inter1);
-            csc_runl(0, NULL,
-                ffmpeg,
-                "-f", format, "-ac", "2", "-ar", "48000", "-i", inter2,
-                "-c:a", icodec,
-                CORD_to_char_star(noiserFile), NULL);
-            unlink(inter2);
 
 #else
             int aud1 = csc_runpl(-1,
@@ -131,6 +122,8 @@ void *aproc(void *vat)
                 "-i", input,
                 "-f", format, "-ac", "2", "-ar", "48000",
                 "-", NULL);
+#endif
+
             int noiseRed = csc_runpl(aud1,
                 program, "2", NULL);
             int aud2 = csc_runpl(noiseRed,
@@ -140,6 +133,8 @@ void *aproc(void *vat)
                 CORD_to_char_star(noiserFile), NULL);
             csc_wait(aud2);
 
+#ifdef _WIN32
+            unlink(inter);
 #endif
         }
 

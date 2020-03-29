@@ -21,6 +21,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 #include "arg.h"
 
 #include "speex/speex_preprocess.h"
@@ -49,6 +53,11 @@ int main(int argc, char **argv)
     ARG_VARS;
 
     fprintf(stderr, "The speexdsp-denoise library used by this software is licensed under the following terms:\n\n%s\n---\n\n", speexdsp_license);
+
+#ifdef _WIN32
+    setmode(0, O_BINARY);
+    setmode(1, O_BINARY);
+#endif
 
     ARG_NEXT();
     while (argType) {
@@ -170,6 +179,11 @@ int main(int argc, char **argv)
     free(sts);
     free(frame);
     free(rawFrame);
+
+    if (inFd != 0)
+        close(inFd);
+    if (outFd != 1)
+        close(outFd);
 
     return 0;
 }
