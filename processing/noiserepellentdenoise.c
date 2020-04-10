@@ -15,6 +15,7 @@
  */
 
 #include <fcntl.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -48,8 +49,8 @@ int main(int argc, char **argv)
     int channels = 1;
     ssize_t rd, total;
     void **sts;
-    char *inFile = NULL, *outFile = NULL;
-    int inFd = 0, outFd = 1;
+    char *inFile = NULL, *outFile = NULL, *learnFile = NULL;
+    int inFd = 0, outFd = 1, learnFd;
 
     ARG_VARS;
 
@@ -75,6 +76,9 @@ int main(int argc, char **argv)
         } else ARGN(c, channels) {
             ARG_GET();
             channels = atoi(arg);
+        } else ARGN(l, learn) {
+            ARG_GET();
+            learnFile = arg;
         } else if (argType == ARG_VAL) {
             channels = atoi(arg);
         } else {
@@ -101,9 +105,20 @@ int main(int argc, char **argv)
 #ifdef _WIN32
             |O_BINARY
 #endif
-            );
+            , 0666);
         if (outFd < 0) {
             perror(outFile);
+            return 1;
+        }
+    }
+    if (learnFile) {
+        learnFd = open(learnFile, O_RDONLY
+#ifdef _WIN32
+            |O_BINARY
+#endif
+            );
+        if (learnFd < 0) {
+            perror(learnFile);
             return 1;
         }
     }
@@ -134,12 +149,103 @@ int main(int argc, char **argv)
         return 1;
     }
     for (ci = 0; ci < channels; ci++) {
+        float v;
         sts[ci] = nrepel_instantiate(48000);
         nrepel_connect_port(sts[ci], NREPEL_LATENCY, &latency);
+        v = 1;
+        if (learnFile) {
+            nrepel_connect_port(sts[ci], NREPEL_N_LEARN, &v);
+            v = 100;
+        } else {
+            nrepel_connect_port(sts[ci], NREPEL_N_ADAPTIVE, &v);
+            v = 25;
+        }
+        nrepel_connect_port(sts[ci], NREPEL_WHITENING, &v);
+    }
+
+    // If we're learning, learn!
+    if (learnFile) {
+        float *learnBuf, *learnIn, *learnOut;
+        size_t learnRd, learnSz;
+        ssize_t rd;
+        learnSz = 48000*channels;
+        learnBuf = malloc(learnSz * sizeof(float));
+        if (learnBuf == NULL) {
+            perror("malloc");
+            return 1;
+        }
+        learnIn = malloc(48000 * sizeof(float));
+        if (learnIn == NULL) {
+            perror("malloc");
+            return 1;
+        }
+        learnOut = malloc(48000 * sizeof(float));
+        if (learnOut == NULL) {
+            perror("malloc");
+            return 1;
+        }
+
+        // Read it in
+        learnRd = 0;
+        while (learnRd < learnSz) {
+            rd = read(learnFd, ((char *) learnBuf) + learnRd, learnSz);
+            if (rd <= 0)
+                break;
+            learnRd += rd;
+        }
+        if (learnRd < learnSz) {
+            perror(learnFile);
+            return 1;
+        }
+
+        // Go channel by channel
+        for (ci = 0; ci < channels; ci++) {
+            float max, ra;
+
+            nrepel_connect_port(sts[ci], NREPEL_INPUT, learnIn);
+            nrepel_connect_port(sts[ci], NREPEL_OUTPUT, learnOut);
+
+            // Extract one channel
+            for (i = ci, oi = 0;
+                 i < learnSz;
+                 (i += channels), oi++) {
+                learnIn[oi] = learnBuf[i];
+            }
+
+            // Figure out its max
+            max = 0;
+            for (i = 0; i < 48000; i++) {
+                if (learnIn[i] > max)
+                    max = learnIn[i];
+            }
+
+            // Use that to determine reduction amount
+            // NOTE: The magic number is 1/log(10), to convert to log base 10
+            ra = 40 + (4.342944819*log(max));
+            fprintf(stderr, "Suggested reduction: %f\n", ra);
+            if (ra < 12)
+                ra = 12;
+            nrepel_connect_port(sts[ci], NREPEL_AMOUNT, &ra);
+
+            // Process it many times to learn
+            for (i = 0; i < 128; i++)
+                nrepel_run(sts[ci], 48000);
+
+            // Switch off learning
+            max = 0;
+            nrepel_connect_port(sts[ci], NREPEL_N_LEARN, &max);
+        }
+
+        close(learnFd);
+        free(learnOut);
+        free(learnIn);
+        free(learnBuf);
+    }
+
+    // Prepare for the real task
+    for (ci = 0; ci < channels; ci++) {
         nrepel_connect_port(sts[ci], NREPEL_INPUT, inFrame);
         nrepel_connect_port(sts[ci], NREPEL_OUTPUT, outFrame);
-        float whitening = 25;
-        nrepel_connect_port(sts[ci], NREPEL_WHITENING, &whitening);
     }
 
     while (1) {

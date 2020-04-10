@@ -73,6 +73,9 @@ int main(int argc, char **argv)
         } else ARGN(c, channels) {
             ARG_GET();
             channels = atoi(arg);
+        } else ARGN(l, learn) {
+            ARG_GET();
+            // Speex can't learn
         } else if (argType == ARG_VAL) {
             channels = atoi(arg);
         } else {
@@ -99,7 +102,7 @@ int main(int argc, char **argv)
 #ifdef _WIN32
             |O_BINARY
 #endif
-            );
+            , 0666);
         if (outFd < 0) {
             perror(outFile);
             return 1;

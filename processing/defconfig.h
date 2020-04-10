@@ -57,6 +57,7 @@ static const char defConfig[] =
 // steps to perform in processing
 "\n[steps]\n"
 "noiser=noiserepellent\n"
+"noiserlearn=y\n"
 "aproc=2\n"
 
 // Don't bypass normal video processing

@@ -83,8 +83,10 @@ void *aproc(void *vat)
     input = csc_absolute(input);
 
     CORD noiserFile = csc_absolute(csc_casprintf("%r-noiser.%r", base, iformat));
+    CORD noiseFile = csc_absolute(csc_casprintf("%r-noise.f32", base));
     CORD outFile = csc_absolute(csc_casprintf("%r-proc.%r", base, iformat));
     CORD noiser = csc_configRead(csc_configTree, "steps.noiser", base, NULL);
+    bool noiseLearn = csc_configBool(csc_configTree, "steps.noiserlearn", base);
 
     // If we're already done, we're already done!
     if (csc_fileExists(outFile)) {
@@ -100,8 +102,45 @@ void *aproc(void *vat)
         if (!CORD_cmp(noiser, "noiserepellent"))
             format = "f32le";
 
+        // Find noise if needed
+        if (noiseLearn && !csc_fileExists(noiseFile)) {
+#ifdef _WIN32
+            // Windows ffmpeg doesn't pipeline well
+            char *inter = CORD_to_char_star(csc_absolute(csc_casprintf("%r-noise1.raw", base)));
+            csc_runl(0, NULL,
+                ffmpeg,
+                "-i", input,
+                "-f", "f32le", "-ac", "2", "-ar", "48000",
+                inter, NULL);
+            int aud2 = csc_runpl(-1,
+                "plip-findnoise",
+                "-i", inter,
+                "-o", CORD_to_char_star(noiseFile),
+                "2", NULL);
+
+#else
+            int aud1 = csc_runpl(-1,
+                ffmpeg,
+                "-i", input,
+                "-f", "f32le", "-ac", "2", "-ar", "48000",
+                "-", NULL);
+            int aud2 = csc_runpl(aud1,
+                "plip-findnoise",
+                "-o", CORD_to_char_star(noiseFile),
+                "2", NULL);
+
+#endif
+            csc_wait(aud2);
+
+#ifdef _WIN32
+            unlink(inter);
+#endif
+        }
+
         // Perform noise reduction
         if (!csc_fileExists(noiserFile)) {
+            int noiseRed;
+
             // Set up the pipeline
 #ifdef _WIN32
             // Windows ffmpeg doesn't pipeline well
@@ -111,10 +150,18 @@ void *aproc(void *vat)
                 "-i", input,
                 "-f", format, "-ac", "2", "-ar", "48000",
                 inter, NULL);
-            int aud1 = csc_runpl(-1,
-                program,
-                "-i", inter,
-                "2", NULL);
+            if (noiseLearn) {
+                noiseRed = csc_runpl(-1,
+                    program,
+                    "-i", inter,
+                    "-l", noiseFile,
+                    "2", NULL);
+            } else {
+                noiseRed = csc_runpl(-1,
+                    program,
+                    "-i", inter,
+                    "2", NULL);
+            }
 
 #else
             int aud1 = csc_runpl(-1,
@@ -122,10 +169,17 @@ void *aproc(void *vat)
                 "-i", input,
                 "-f", format, "-ac", "2", "-ar", "48000",
                 "-", NULL);
+            if (noiseLearn) {
+                noiseRed = csc_runpl(aud1,
+                    program,
+                    "-l", noiseFile,
+                    "2", NULL);
+            } else {
+                noiseRed = csc_runpl(aud1,
+                    program, "2", NULL);
+            }
 #endif
 
-            int noiseRed = csc_runpl(aud1,
-                program, "2", NULL);
             int aud2 = csc_runpl(noiseRed,
                 ffmpeg,
                 "-f", format, "-ac", "2", "-ar", "48000", "-i", "-",

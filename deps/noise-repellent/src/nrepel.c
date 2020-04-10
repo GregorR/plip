@@ -223,7 +223,7 @@ nrepel_instantiate(double rate)
 	self->masking = 5;
 	self->whitening_factor_pc = 0;
 	self->noise_learn_state = 0;
-	self->adaptive_state = 1;
+	self->adaptive_state = 0;
 	self->reset_profile = 0;
 	self->residual_listen = 0;
 	self->transient_protection = 6;
