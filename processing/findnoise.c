@@ -155,9 +155,9 @@ int main(int argc, char **argv)
     }
 
     // Allocate our frames
-    curFrame = allocFloatArr2(channels, FRAME_SIZE, 0);
+    curFrame = allocFloatArr2(channels, FRAME_SIZE, 1);
     selFrame = allocFloatArr2(channels, FRAME_SIZE, 0);
-    curVolume = allocFloatArr(channels, 0);
+    curVolume = allocFloatArr(channels, FRAME_SIZE);
     selVolume = allocFloatArr(channels, FRAME_SIZE);
     curOffset = calloc(channels, sizeof(int));
     if (curOffset == NULL) {
