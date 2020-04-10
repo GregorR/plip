@@ -192,6 +192,10 @@ void *aproc(void *vat)
 #endif
         }
 
+        // There's no reason to keep the learning file around
+        if (noiseLearn)
+            unlink(CORD_to_char_star(noiseFile));
+
     } else {
         unlink(CORD_to_char_star(noiserFile));
         csc_ln(input, noiserFile);
