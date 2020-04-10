@@ -33,7 +33,7 @@ fftw/.libs/libfftw3f.a:
 		( test -e Makefile || ./configure --host="$(CROSS_COMPILE)" --enable-float --enable-static --disable-shared ) ; \
 		$(MAKE)
 
-noise-repellent/src/libnr.a:
+noise-repellent/src/libnr.a: fftw/.libs/libfftw3f.a
 	cd noise-repellent/src ; $(MAKE) CROSS_PREFIX="$(CROSS_PREFIX)"
 
 clean:
