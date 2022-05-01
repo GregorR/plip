@@ -28,6 +28,7 @@ EXES= \
 	plip-speexdenoise$(EXE_EXT) \
 	plip-noiserepellentdenoise$(EXE_EXT) \
 	plip-aproc$(EXE_EXT) \
+	plip-silencemarks$(EXE_EXT) \
 	plip-marktofilter$(EXE_EXT) \
 	plip-clip$(EXE_EXT) \
 	plip-mix$(EXE_EXT) \

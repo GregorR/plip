@@ -19,6 +19,7 @@ wine
 # processing:
 processing/plip
 processing/plip-aproc
+processing/plip-silencemarks
 processing/plip-clip
 processing/plip-defconfig
 processing/plip-demux
