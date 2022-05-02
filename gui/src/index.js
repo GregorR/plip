@@ -2,7 +2,7 @@ const {app, BrowserWindow} = require("electron");
 const path = require("path");
 const fs = require("fs");
 
-const debug = true;
+const debug = false;
 
 // Handle arguments
 const config = (function() {
