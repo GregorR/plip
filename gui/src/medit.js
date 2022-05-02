@@ -259,7 +259,7 @@
             return a.t - b.t;
         });
 
-        if (!full) return;
+        //if (!full) return;
 
         var mode = "o";
         var i;
