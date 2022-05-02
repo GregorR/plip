@@ -22,7 +22,7 @@
     const urlParams = new URLSearchParams(url.search);
     const config = JSON.parse(urlParams.get("c"));
 
-    const geid = document.getElementById.bind(document);
+    const gebi = document.getElementById.bind(document);
     const ce = document.createElement.bind(document);
 
     // "Configurable" globals
@@ -30,12 +30,12 @@
     let minffspeed = 4;
 
     // Our display boxes
-    const speedBox = geid("speed");
-    const timeBox = geid("totalTime");
-    const media = geid("media");
-    const marksBox = geid("marks");
-    const jumpBox = geid("jump");
-    const jumpToBox = geid("jumpTo");
+    const speedBox = gebi("speed");
+    const timeBox = gebi("totalTime");
+    const media = gebi("media");
+    const marksBox = gebi("marks");
+    const jumpBox = gebi("jump");
+    const jumpToBox = gebi("jumpTo");
     let curPosBox = null;
 
     // Our current marks
@@ -107,7 +107,7 @@
 
     // Create the wavesurfer display
     let wavesurfer = null;
-    geid("waveform").style.backgroundColor = grey;
+    gebi("waveform").style.backgroundColor = grey;
 
     // Load our waveform data
     let waveform = null;
@@ -242,10 +242,21 @@
 
     // Read in the original marks
     (function() {
-        let marksRaw = [];
+        let marksRaw = null;
+
         try {
-            marksRaw = fs.readFileSync(config.inMarks, "utf8").split("\n");
-        } catch (ex) {} // input file is allowed to not exist
+            marksRaw = fs.readFileSync(config.outMarks, "utf8").split("\n");
+        } catch (ex) {} // Use outMarks if they already exist
+
+        if (!marksRaw) {
+            try {
+                marksRaw = fs.readFileSync(config.inMarks, "utf8").split("\n");
+            } catch (ex) {} // input file is allowed to not exist
+        }
+
+        if (!marksRaw)
+            marksRaw = [];
+
         marksRaw.forEach((marksLine) => {
             if (marksLine.length)
                 marks.push({"e": marksLine[0], "t": Number(marksLine.slice(1))});
@@ -590,7 +601,7 @@
         jumps = marks.filter(function(mark) {
             return (mark.e === "i" || mark.e === "n");
         });
-        geid("jumpLimit").innerText = jumps.length;
+        gebi("jumpLimit").innerText = jumps.length;
     }
 
     // Insert a mark at the current location, or insert a complete mark object at the correct location
@@ -866,7 +877,7 @@
                 break;
 
             case 191: // ? (help)
-                var hlp = geid("help");
+                var hlp = gebi("help");
                 if (hlp.style.display === "none")
                     hlp.style.display = "block";
                 else
@@ -879,7 +890,7 @@
                 
             default:
                 // Unrecognized
-                //geid("debug").innerText = ev.keyCode;
+                //gebi("debug").innerText = ev.keyCode;
                 return true;
         }
 
@@ -933,8 +944,8 @@
     });
 
     // And the help button opens help
-    geid("helpB").onclick = function() {
-        geid("help").style.display = "block";
+    gebi("helpB").onclick = function() {
+        gebi("help").style.display = "block";
     };
 
     window.addEventListener("resize", updateMarks);
