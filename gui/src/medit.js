@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Gregor Richards
+ * Copyright (c) 2020-2022 Gregor Richards
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
 
 (function() {
     const fs = require("fs");
-    const path = require("path");
+    const http = require("http");
 
     const url = new URL(window.location);
     const urlParams = new URLSearchParams(url.search);
@@ -53,8 +53,57 @@
     const blue = "#002";
     const yellow = "#220";
 
-    // Load our media
-    media.src = path.resolve(config.media);
+    /* Set up an internal HTTP server so that we don't have to load all the
+     * media into memory */
+    const fd = fs.openSync(config.media, "r");
+    const fstat = fs.fstatSync(fd);
+    const hs = http.createServer(function(req, res) {
+        if (req.url !== "/media.mp4") {
+            res.end();
+            return;
+        }
+
+        // Figure out the range
+        const limit = 10 * 1024 * 1024;
+        let range = [0, fstat.size];
+        const rreq = /bytes *= *([0-9]*)-([0-9]*)/.exec(req.headers.range);
+        if (rreq) {
+            const lo = +rreq[1];
+            const hi = +rreq[2];
+            range[0] = lo;
+            if (hi <= lo || (hi - lo) > limit) {
+                range[1] = lo + limit;
+            } else {
+                range[1] = hi;
+            }
+        }
+        if (range[1] > fstat.size)
+            range[1] = fstat.size;
+
+        // Send the header
+        res.setHeader("content-type", "video/mp4");
+        res.setHeader("content-length", "" + (range[1] - range[0]));
+        res.setHeader("accept-ranges", "bytes");
+        res.setHeader("content-range",
+            "bytes " + range[0] + "-" + (range[1]-1) + "/" + fstat.size);
+        res.writeHead(206);
+
+        // Send the data
+        const part = Buffer.alloc(limit);
+        for (let i = range[0]; i < range[1];) {
+            const len = fs.readSync(fd, part, 0,
+                Math.min(part.length, range[1] - i), i);
+            if (len <= 0)
+                break;
+            res.write(part.slice(0, len));
+            i += len;
+        }
+        res.end();
+    });
+    hs.listen();
+
+    // Load the media
+    media.src = "http://localhost:" + hs.address().port + "/media.mp4";
 
     // Create the wavesurfer display
     let wavesurfer = null;
