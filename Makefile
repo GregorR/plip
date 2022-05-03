@@ -62,8 +62,8 @@ dist: all
 	cp -a gui/out/plip-gui* plip/gui
 	cat gui/LICENSE gui/out/plip-gui*/LICENSE > plip/gui/LICENSE
 	
-	unzip -d plip/ ffmpeg-$(FFMPEG_VERSION)-win64-shared.zip
-	mv plip/ffmpeg-$(FFMPEG_VERSION)-win64-shared/ plip/ffmpeg
+	7z -oplip x ffmpeg-$(FFMPEG_VERSION)-full_build-shared.7z
+	mv plip/ffmpeg-$(FFMPEG_VERSION)-full_build-shared/ plip/ffmpeg
 	mv plip/ffmpeg/bin/* plip/bin/
 	mv plip/ffmpeg/presets plip/
 	
