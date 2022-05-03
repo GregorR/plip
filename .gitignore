@@ -32,6 +32,7 @@ processing/plip-marktofilter
 processing/plip-mix
 processing/plip-speexdenoise
 processing/plip-aproc.exe
+processing/plip-silencemarks.exe
 processing/plip-clip.exe
 processing/plip-defconfig.exe
 processing/plip-demux.exe
