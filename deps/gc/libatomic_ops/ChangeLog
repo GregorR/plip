@@ -1,4 +1,27 @@
 
+== [7.6.12] 2021-09-13 ==
+
+* Allow to generalize bool-CAS for sparc (gcc)
+* Declare argument of AO_load_next with const in atomic_ops_stack
+* Describe double_compare_and_swap operation in README_details
+* Document CAS operations better in README_details
+* Fix gcc/sunc x86 AO_compare_double_and_swap_double missing side effect
+* Fix library name in README_details
+* Fix link fail caused by missing GCC char/short atomic primitives on riscv64
+* Fix size of local variable passed to cas[x] (gcc/sparc)
+* Implement fetch-CAS for sparc (gcc)
+* Refactor gcc x86 memory constraints
+* Refine and reformat description of size prefix in README_details
+* Remove outdated notes in README_details
+* Replace x86 setz instruction by asm flag output operand (gcc)
+* Support MSYS host (configure)
+* Turn off compare_double_and_swap_double_full PIC hack for GCC 5+ (x86)
+* Update README_win32 to match Makefile.msft
+* Use GCC atomic intrinsics for s390x (clang 8.0+ and gcc 5.4+)
+* Use __alignof__ instead of sizeof in atomic variable alignment assertions
+* Workaround assertion violation in AO_load/store on m68k
+
+
 == [7.6.10] 2019-03-01 ==
 
 * Eliminate 'my_chunk_ptr-AO_initial_heap out of bounds' cppcheck warning
@@ -148,6 +171,14 @@ Also, includes 7.4.8 changes
 * Workaround a bug in double-wide intrinsics of Clang/x64 with ASan enabled
 * Workaround MSan warning about uninitialized data read by generalized store
 Also, includes 7.4.6 changes
+
+
+== [7.4.16] 2021-09-13 ==
+
+* Fix gcc/sunc x86 AO_compare_double_and_swap_double missing side effect
+* Fix library name in README_details
+* Fix size of local variable passed to cas[x] (gcc/sparc)
+* Workaround assertion violation in AO_load/store on m68k
 
 
 == [7.4.14] 2019-03-01 ==
@@ -367,9 +398,14 @@ Also, includes 7.2e changes
 Also, includes 7.2 changes
 
 
-== [7.2j] (not released yet) ==
+== [7.2j] 2021-09-12 ==
 
 * Fix a typo in arm_v6.h
+* Fix asm constraints of primitives in sunc/x86_64.h
+* Fix gcc/sunc x86 AO_compare_double_and_swap_double missing side effect
+* Fix library name in README details
+* Fix size of local variable passed to cas[x] (gcc/sparc)
+* Workaround assertion violation in AO_load/store on m68k
 
 
 == [7.2i] 2017-12-21 ==

@@ -6,6 +6,7 @@
 *.pc
 *.zip
 *.tar.xz
+*.7z
 .deps
 .libs
 config.h

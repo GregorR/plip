@@ -142,34 +142,44 @@ check_PROGRAMS = cordtest$(EXEEXT) gctest$(EXEEXT) leaktest$(EXEEXT) \
 
 # C Library: Architecture Dependent
 # ---------------------------------
-@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_TRUE@am__append_4 = thread_local_alloc.c win32_threads.c
+@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_TRUE@am__append_4 = win32_threads.c
 # Not Cygwin or MinGW.
-@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__append_5 = pthread_start.c pthread_support.c thread_local_alloc.c
+@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__append_5 = pthread_start.c pthread_support.c
 @DARWIN_THREADS_TRUE@@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__append_6 = darwin_stop_world.c
 @DARWIN_THREADS_FALSE@@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__append_7 = pthread_stop_world.c
-@MAKE_BACK_GRAPH_TRUE@@SINGLE_GC_OBJ_FALSE@am__append_8 = backgraph.c
-@ENABLE_DISCLAIM_TRUE@@SINGLE_GC_OBJ_FALSE@am__append_9 = fnlz_mlc.c
+@SINGLE_GC_OBJ_FALSE@@THREAD_LOCAL_ALLOC_TRUE@am__append_8 = thread_local_alloc.c
+@MAKE_BACK_GRAPH_TRUE@@SINGLE_GC_OBJ_FALSE@am__append_9 = backgraph.c
+@CHECKSUMS_TRUE@@SINGLE_GC_OBJ_FALSE@am__append_10 = checksums.c
+@ENABLE_DISCLAIM_TRUE@@SINGLE_GC_OBJ_FALSE@am__append_11 = fnlz_mlc.c
+@ENABLE_DISCLAIM_TRUE@@SINGLE_GC_OBJ_FALSE@am__append_12 = include/gc_disclaim.h
 
 # C++ Interface
 # -------------
-@CPLUSPLUS_TRUE@am__append_10 = libgccpp.la
-@CPLUSPLUS_TRUE@am__append_11 = include/gc_cpp.h
-@CPLUSPLUS_TRUE@am__append_12 = include/extra/gc_cpp.h
-@THREADS_TRUE@am__append_13 = $(THREADDLLIBS)
-@KEEP_BACK_PTRS_TRUE@am__append_14 = tracetest$(EXEEXT)
-@KEEP_BACK_PTRS_TRUE@am__append_15 = tracetest
-@THREADS_TRUE@am__append_16 = threadleaktest$(EXEEXT) \
-@THREADS_TRUE@	threadkey_test$(EXEEXT) \
+@CPLUSPLUS_TRUE@am__append_13 = libgccpp.la
+@CPLUSPLUS_TRUE@am__append_14 = include/gc_allocator.h include/gc_cpp.h
+@CPLUSPLUS_TRUE@am__append_15 = include/extra/gc_cpp.h
+@ENABLE_SHARED_TRUE@am__append_16 = $(top_builddir)/libgc.la
+@THREADS_TRUE@am__append_17 = $(THREADDLLIBS)
+@ENABLE_SHARED_TRUE@am__append_18 = $(top_builddir)/libgc.la
+@KEEP_BACK_PTRS_TRUE@am__append_19 = tracetest$(EXEEXT)
+@KEEP_BACK_PTRS_TRUE@am__append_20 = tracetest
+@THREADS_TRUE@am__append_21 = test_atomic_ops$(EXEEXT) \
+@THREADS_TRUE@	threadleaktest$(EXEEXT) threadkey_test$(EXEEXT) \
 @THREADS_TRUE@	subthreadcreate_test$(EXEEXT) \
 @THREADS_TRUE@	initsecondarythread_test$(EXEEXT)
-@THREADS_TRUE@am__append_17 = threadleaktest threadkey_test \
-@THREADS_TRUE@	subthreadcreate_test initsecondarythread_test
-@CPLUSPLUS_TRUE@am__append_18 = test_cpp$(EXEEXT)
-@CPLUSPLUS_TRUE@am__append_19 = test_cpp
-@ENABLE_DISCLAIM_TRUE@am__append_20 = disclaim_test$(EXEEXT) \
-@ENABLE_DISCLAIM_TRUE@	disclaim_bench$(EXEEXT)
-@ENABLE_DISCLAIM_TRUE@am__append_21 = disclaim_test disclaim_bench
-@ENABLE_DISCLAIM_TRUE@@THREADS_TRUE@am__append_22 = $(THREADDLLIBS)
+@THREADS_TRUE@am__append_22 = test_atomic_ops threadleaktest \
+@THREADS_TRUE@	threadkey_test subthreadcreate_test \
+@THREADS_TRUE@	initsecondarythread_test
+@CPLUSPLUS_TRUE@am__append_23 = test_cpp$(EXEEXT)
+@CPLUSPLUS_TRUE@am__append_24 = test_cpp
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@@ENABLE_SHARED_TRUE@am__append_25 = $(top_builddir)/libgc.la
+@ENABLE_DISCLAIM_TRUE@am__append_26 = disclaim_test$(EXEEXT) \
+@ENABLE_DISCLAIM_TRUE@	disclaim_bench$(EXEEXT) \
+@ENABLE_DISCLAIM_TRUE@	disclaim_weakmap_test$(EXEEXT)
+@ENABLE_DISCLAIM_TRUE@am__append_27 = disclaim_test disclaim_bench \
+@ENABLE_DISCLAIM_TRUE@	disclaim_weakmap_test
+@ENABLE_DISCLAIM_TRUE@@THREADS_TRUE@am__append_28 = $(THREADDLLIBS)
+@ENABLE_DISCLAIM_TRUE@@THREADS_TRUE@am__append_29 = $(THREADDLLIBS)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gc_set_version.m4 \
@@ -232,42 +242,43 @@ libcord_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libcord_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
-am__libgc_la_SOURCES_DIST = allchblk.c alloc.c blacklst.c checksums.c \
-	dbg_mlc.c dyn_load.c finalize.c gc_dlopen.c gcj_mlc.c \
-	headers.c mach_dep.c malloc.c mallocx.c mark.c mark_rts.c \
-	misc.c new_hblk.c obj_map.c os_dep.c pcr_interface.c \
-	ptr_chck.c real_malloc.c reclaim.c specific.c stubborn.c \
-	typd_mlc.c thread_local_alloc.c win32_threads.c \
-	pthread_start.c pthread_support.c darwin_stop_world.c \
-	pthread_stop_world.c backgraph.c fnlz_mlc.c extra/gc.c
-@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_TRUE@am__objects_1 = thread_local_alloc.lo \
+am__libgc_la_SOURCES_DIST = allchblk.c alloc.c blacklst.c dbg_mlc.c \
+	dyn_load.c finalize.c gc_dlopen.c gcj_mlc.c headers.c \
+	mach_dep.c malloc.c mallocx.c mark.c mark_rts.c misc.c \
+	new_hblk.c obj_map.c os_dep.c ptr_chck.c reclaim.c specific.c \
+	typd_mlc.c win32_threads.c pthread_start.c pthread_support.c \
+	darwin_stop_world.c pthread_stop_world.c thread_local_alloc.c \
+	backgraph.c checksums.c fnlz_mlc.c extra/gc.c
+@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_TRUE@am__objects_1 =  \
 @SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_TRUE@	win32_threads.lo
 @PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__objects_2 = pthread_start.lo \
-@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@	pthread_support.lo \
-@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@	thread_local_alloc.lo
+@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@	pthread_support.lo
 @DARWIN_THREADS_TRUE@@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__objects_3 = darwin_stop_world.lo
 @DARWIN_THREADS_FALSE@@PTHREADS_TRUE@@SINGLE_GC_OBJ_FALSE@@WIN32_THREADS_FALSE@am__objects_4 = pthread_stop_world.lo
-@MAKE_BACK_GRAPH_TRUE@@SINGLE_GC_OBJ_FALSE@am__objects_5 =  \
+@SINGLE_GC_OBJ_FALSE@@THREAD_LOCAL_ALLOC_TRUE@am__objects_5 = thread_local_alloc.lo
+@MAKE_BACK_GRAPH_TRUE@@SINGLE_GC_OBJ_FALSE@am__objects_6 =  \
 @MAKE_BACK_GRAPH_TRUE@@SINGLE_GC_OBJ_FALSE@	backgraph.lo
-@ENABLE_DISCLAIM_TRUE@@SINGLE_GC_OBJ_FALSE@am__objects_6 =  \
+@CHECKSUMS_TRUE@@SINGLE_GC_OBJ_FALSE@am__objects_7 = checksums.lo
+@ENABLE_DISCLAIM_TRUE@@SINGLE_GC_OBJ_FALSE@am__objects_8 =  \
 @ENABLE_DISCLAIM_TRUE@@SINGLE_GC_OBJ_FALSE@	fnlz_mlc.lo
-@PTHREAD_START_STANDALONE_TRUE@@SINGLE_GC_OBJ_TRUE@am__objects_7 = pthread_start.lo
+@PTHREAD_START_STANDALONE_TRUE@@SINGLE_GC_OBJ_TRUE@am__objects_9 = pthread_start.lo
 @SINGLE_GC_OBJ_FALSE@am_libgc_la_OBJECTS = allchblk.lo alloc.lo \
-@SINGLE_GC_OBJ_FALSE@	blacklst.lo checksums.lo dbg_mlc.lo \
-@SINGLE_GC_OBJ_FALSE@	dyn_load.lo finalize.lo gc_dlopen.lo \
-@SINGLE_GC_OBJ_FALSE@	gcj_mlc.lo headers.lo mach_dep.lo \
-@SINGLE_GC_OBJ_FALSE@	malloc.lo mallocx.lo mark.lo mark_rts.lo \
-@SINGLE_GC_OBJ_FALSE@	misc.lo new_hblk.lo obj_map.lo os_dep.lo \
-@SINGLE_GC_OBJ_FALSE@	pcr_interface.lo ptr_chck.lo \
-@SINGLE_GC_OBJ_FALSE@	real_malloc.lo reclaim.lo specific.lo \
-@SINGLE_GC_OBJ_FALSE@	stubborn.lo typd_mlc.lo $(am__objects_1) \
+@SINGLE_GC_OBJ_FALSE@	blacklst.lo dbg_mlc.lo dyn_load.lo \
+@SINGLE_GC_OBJ_FALSE@	finalize.lo gc_dlopen.lo gcj_mlc.lo \
+@SINGLE_GC_OBJ_FALSE@	headers.lo mach_dep.lo malloc.lo \
+@SINGLE_GC_OBJ_FALSE@	mallocx.lo mark.lo mark_rts.lo misc.lo \
+@SINGLE_GC_OBJ_FALSE@	new_hblk.lo obj_map.lo os_dep.lo \
+@SINGLE_GC_OBJ_FALSE@	ptr_chck.lo reclaim.lo specific.lo \
+@SINGLE_GC_OBJ_FALSE@	typd_mlc.lo $(am__objects_1) \
 @SINGLE_GC_OBJ_FALSE@	$(am__objects_2) $(am__objects_3) \
 @SINGLE_GC_OBJ_FALSE@	$(am__objects_4) $(am__objects_5) \
-@SINGLE_GC_OBJ_FALSE@	$(am__objects_6)
-@SINGLE_GC_OBJ_TRUE@am_libgc_la_OBJECTS = extra/gc.lo $(am__objects_7) \
+@SINGLE_GC_OBJ_FALSE@	$(am__objects_6) $(am__objects_7) \
+@SINGLE_GC_OBJ_FALSE@	$(am__objects_8)
+@SINGLE_GC_OBJ_TRUE@am_libgc_la_OBJECTS = extra/gc.lo $(am__objects_9) \
 @SINGLE_GC_OBJ_TRUE@	$(am__objects_1) $(am__objects_2) \
 @SINGLE_GC_OBJ_TRUE@	$(am__objects_3) $(am__objects_4) \
-@SINGLE_GC_OBJ_TRUE@	$(am__objects_5) $(am__objects_6)
+@SINGLE_GC_OBJ_TRUE@	$(am__objects_5) $(am__objects_6) \
+@SINGLE_GC_OBJ_TRUE@	$(am__objects_7) $(am__objects_8)
 @NEED_ATOMIC_OPS_ASM_FALSE@@USE_INTERNAL_LIBATOMIC_OPS_TRUE@nodist_libgc_la_OBJECTS = libatomic_ops/src/atomic_ops.lo
 @NEED_ATOMIC_OPS_ASM_TRUE@nodist_libgc_la_OBJECTS = libatomic_ops/src/atomic_ops_sysdeps.lo
 libgc_la_OBJECTS = $(am_libgc_la_OBJECTS) $(nodist_libgc_la_OBJECTS)
@@ -301,17 +312,17 @@ libstaticrootslib_test_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_CFLAGS) $(CFLAGS) $(libstaticrootslib_test_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 @KEEP_BACK_PTRS_TRUE@am__EXEEXT_1 = tracetest$(EXEEXT)
-@THREADS_TRUE@am__EXEEXT_2 = threadleaktest$(EXEEXT) \
-@THREADS_TRUE@	threadkey_test$(EXEEXT) \
+@THREADS_TRUE@am__EXEEXT_2 = test_atomic_ops$(EXEEXT) \
+@THREADS_TRUE@	threadleaktest$(EXEEXT) threadkey_test$(EXEEXT) \
 @THREADS_TRUE@	subthreadcreate_test$(EXEEXT) \
 @THREADS_TRUE@	initsecondarythread_test$(EXEEXT)
 @CPLUSPLUS_TRUE@am__EXEEXT_3 = test_cpp$(EXEEXT)
 @ENABLE_DISCLAIM_TRUE@am__EXEEXT_4 = disclaim_test$(EXEEXT) \
-@ENABLE_DISCLAIM_TRUE@	disclaim_bench$(EXEEXT)
+@ENABLE_DISCLAIM_TRUE@	disclaim_bench$(EXEEXT) \
+@ENABLE_DISCLAIM_TRUE@	disclaim_weakmap_test$(EXEEXT)
 am_cordtest_OBJECTS = cord/tests/cordtest.$(OBJEXT)
 cordtest_OBJECTS = $(am_cordtest_OBJECTS)
-cordtest_DEPENDENCIES = $(top_builddir)/libgc.la \
-	$(top_builddir)/libcord.la
+cordtest_DEPENDENCIES = $(top_builddir)/libcord.la $(am__append_16)
 am__disclaim_bench_SOURCES_DIST = tests/disclaim_bench.c
 @ENABLE_DISCLAIM_TRUE@am_disclaim_bench_OBJECTS =  \
 @ENABLE_DISCLAIM_TRUE@	tests/disclaim_bench.$(OBJEXT)
@@ -325,6 +336,14 @@ disclaim_test_OBJECTS = $(am_disclaim_test_OBJECTS)
 @ENABLE_DISCLAIM_TRUE@@THREADS_TRUE@am__DEPENDENCIES_3 =  \
 @ENABLE_DISCLAIM_TRUE@@THREADS_TRUE@	$(am__DEPENDENCIES_1)
 @ENABLE_DISCLAIM_TRUE@disclaim_test_DEPENDENCIES =  \
+@ENABLE_DISCLAIM_TRUE@	$(am__DEPENDENCIES_2) \
+@ENABLE_DISCLAIM_TRUE@	$(am__DEPENDENCIES_3)
+am__disclaim_weakmap_test_SOURCES_DIST =  \
+	tests/disclaim_weakmap_test.c
+@ENABLE_DISCLAIM_TRUE@am_disclaim_weakmap_test_OBJECTS =  \
+@ENABLE_DISCLAIM_TRUE@	tests/disclaim_weakmap_test.$(OBJEXT)
+disclaim_weakmap_test_OBJECTS = $(am_disclaim_weakmap_test_OBJECTS)
+@ENABLE_DISCLAIM_TRUE@disclaim_weakmap_test_DEPENDENCIES =  \
 @ENABLE_DISCLAIM_TRUE@	$(am__DEPENDENCIES_2) \
 @ENABLE_DISCLAIM_TRUE@	$(am__DEPENDENCIES_3)
 am_gctest_OBJECTS = tests/test.$(OBJEXT)
@@ -356,8 +375,9 @@ smashtest_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_staticrootstest_OBJECTS =  \
 	tests/staticrootstest-staticrootstest.$(OBJEXT)
 staticrootstest_OBJECTS = $(am_staticrootstest_OBJECTS)
-staticrootstest_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libstaticrootslib_test.la libstaticrootslib2_test.la
+staticrootstest_DEPENDENCIES = $(nodist_libgc_la_OBJECTS) \
+	$(am__DEPENDENCIES_1) libstaticrootslib_test.la \
+	libstaticrootslib2_test.la $(am__append_18)
 staticrootstest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(staticrootstest_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
@@ -368,16 +388,25 @@ am__subthreadcreate_test_SOURCES_DIST = tests/subthread_create.c
 subthreadcreate_test_OBJECTS = $(am_subthreadcreate_test_OBJECTS)
 @THREADS_TRUE@subthreadcreate_test_DEPENDENCIES =  \
 @THREADS_TRUE@	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1)
+am__test_atomic_ops_SOURCES_DIST = tests/test_atomic_ops.c
+@THREADS_TRUE@am_test_atomic_ops_OBJECTS =  \
+@THREADS_TRUE@	tests/test_atomic_ops.$(OBJEXT)
+test_atomic_ops_OBJECTS = $(am_test_atomic_ops_OBJECTS)
+@THREADS_TRUE@test_atomic_ops_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+@THREADS_TRUE@	$(am__DEPENDENCIES_1)
 am__test_cpp_SOURCES_DIST = tests/test_cpp.cc
 @CPLUSPLUS_TRUE@am_test_cpp_OBJECTS = tests/test_cpp.$(OBJEXT)
 test_cpp_OBJECTS = $(am_test_cpp_OBJECTS)
 @AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@test_cpp_DEPENDENCIES =  \
 @AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	libgccpp.la \
-@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_2) \
-@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_1)
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(nodist_libgc_la_OBJECTS) \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_1) \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_1) \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(am__append_25)
 @AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@test_cpp_DEPENDENCIES = gc_cpp.o \
 @AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_2) \
-@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_1)
+@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@	$(am__DEPENDENCIES_1) \
+@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@	$(am__append_25)
 am__threadkey_test_SOURCES_DIST = tests/threadkey_test.c
 @THREADS_TRUE@am_threadkey_test_OBJECTS =  \
 @THREADS_TRUE@	tests/threadkey_test.$(OBJEXT)
@@ -470,11 +499,12 @@ SOURCES = $(libcord_la_SOURCES) $(libgc_la_SOURCES) \
 	$(libgccpp_la_SOURCES) $(libstaticrootslib2_test_la_SOURCES) \
 	$(libstaticrootslib_test_la_SOURCES) $(cordtest_SOURCES) \
 	$(disclaim_bench_SOURCES) $(disclaim_test_SOURCES) \
-	$(gctest_SOURCES) $(hugetest_SOURCES) \
-	$(initsecondarythread_test_SOURCES) $(leaktest_SOURCES) \
-	$(middletest_SOURCES) $(realloc_test_SOURCES) \
-	$(smashtest_SOURCES) $(staticrootstest_SOURCES) \
-	$(subthreadcreate_test_SOURCES) $(test_cpp_SOURCES) \
+	$(disclaim_weakmap_test_SOURCES) $(gctest_SOURCES) \
+	$(hugetest_SOURCES) $(initsecondarythread_test_SOURCES) \
+	$(leaktest_SOURCES) $(middletest_SOURCES) \
+	$(realloc_test_SOURCES) $(smashtest_SOURCES) \
+	$(staticrootstest_SOURCES) $(subthreadcreate_test_SOURCES) \
+	$(test_atomic_ops_SOURCES) $(test_cpp_SOURCES) \
 	$(threadkey_test_SOURCES) $(threadleaktest_SOURCES) \
 	$(tracetest_SOURCES)
 DIST_SOURCES = $(libcord_la_SOURCES) $(am__libgc_la_SOURCES_DIST) \
@@ -482,13 +512,15 @@ DIST_SOURCES = $(libcord_la_SOURCES) $(am__libgc_la_SOURCES_DIST) \
 	$(libstaticrootslib2_test_la_SOURCES) \
 	$(libstaticrootslib_test_la_SOURCES) $(cordtest_SOURCES) \
 	$(am__disclaim_bench_SOURCES_DIST) \
-	$(am__disclaim_test_SOURCES_DIST) $(gctest_SOURCES) \
+	$(am__disclaim_test_SOURCES_DIST) \
+	$(am__disclaim_weakmap_test_SOURCES_DIST) $(gctest_SOURCES) \
 	$(hugetest_SOURCES) \
 	$(am__initsecondarythread_test_SOURCES_DIST) \
 	$(leaktest_SOURCES) $(middletest_SOURCES) \
 	$(realloc_test_SOURCES) $(smashtest_SOURCES) \
 	$(staticrootstest_SOURCES) \
 	$(am__subthreadcreate_test_SOURCES_DIST) \
+	$(am__test_atomic_ops_SOURCES_DIST) \
 	$(am__test_cpp_SOURCES_DIST) \
 	$(am__threadkey_test_SOURCES_DIST) \
 	$(am__threadleaktest_SOURCES_DIST) \
@@ -516,20 +548,20 @@ am__dist_doc_DATA_DIST = AUTHORS README.md doc/README.DGUX386 \
 	doc/README.ews4800 doc/README.hp doc/README.linux \
 	doc/README.macros doc/README.rs6000 doc/README.sgi \
 	doc/README.solaris2 doc/README.symbian doc/README.uts \
-	doc/README.win32 doc/README.win64 doc/debugging.html \
-	doc/finalization.html doc/gcdescr.html doc/gcinterface.html \
-	doc/leak.html doc/overview.html doc/porting.html \
-	doc/scale.html doc/simple_example.html doc/tree.html
+	doc/README.win32 doc/README.win64 doc/debugging.md \
+	doc/finalization.md doc/gcdescr.md doc/gcinterface.md \
+	doc/leak.md doc/overview.md doc/porting.md doc/scale.md \
+	doc/simple_example.md doc/tree.md
 DATA = $(dist_doc_DATA) $(pkgconfig_DATA)
 am__include_HEADERS_DIST = include/extra/gc_cpp.h include/extra/gc.h
-am__pkginclude_HEADERS_DIST = include/gc_cpp.h include/gc.h \
-	include/gc_allocator.h include/gc_backptr.h \
-	include/gc_config_macros.h include/gc_disclaim.h \
+am__pkginclude_HEADERS_DIST = include/gc_disclaim.h \
+	include/gc_allocator.h include/gc_cpp.h include/gc.h \
+	include/gc_backptr.h include/gc_config_macros.h \
 	include/gc_gcj.h include/gc_inline.h include/gc_mark.h \
 	include/gc_pthread_redirects.h include/gc_tiny_fl.h \
 	include/gc_typed.h include/gc_version.h include/javaxfc.h \
-	include/leak_detector.h include/weakpointer.h include/cord.h \
-	include/cord_pos.h include/ec.h
+	include/leak_detector.h include/cord.h include/cord_pos.h \
+	include/ec.h
 HEADERS = $(dist_noinst_HEADERS) $(include_HEADERS) \
 	$(pkginclude_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
@@ -860,9 +892,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
-PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
-PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -920,6 +949,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -938,8 +968,8 @@ top_srcdir = @top_srcdir@
 # Info (current:revision:age) for the Libtool versioning system.
 # These numbers should be updated at most once just before the release,
 # and, optionally, at most once during the development (after the release).
-LIBGC_VER_INFO = 4:6:3
-LIBGCCPP_VER_INFO = 4:2:3
+LIBGC_VER_INFO = 5:4:4
+LIBGCCPP_VER_INFO = 5:1:4
 
 # We currently use the source files directly from libatomic_ops, if we
 # use the internal version.  This is done since libatomic_ops doesn't
@@ -969,46 +999,45 @@ ACLOCAL_AMFLAGS = -I m4
 #
 EXTRA_DIST = $(am__append_3) gc_cpp.cpp README.QUICK BCC_MAKEFILE \
 	NT_MAKEFILE OS2_MAKEFILE PCR-Makefile digimars.mak \
-	EMX_MAKEFILE Makefile.direct SMakefile.amiga WCC_MAKEFILE \
-	autogen.sh CMakeLists.txt tests/CMakeLists.txt \
-	tools/add_gc_prefix.c tools/gcname.c tools/if_mach.c \
+	Makefile.direct SMakefile.amiga WCC_MAKEFILE autogen.sh \
+	CMakeLists.txt tests/CMakeLists.txt tools/if_mach.c \
 	tools/if_not_there.c tools/setjmp_t.c tools/threadlibs.c \
 	gc.mak extra/MacOS.c extra/AmigaOS.c \
 	extra/symbian/global_end.cpp extra/symbian/global_start.cpp \
 	extra/symbian/init_global_static_roots.cpp extra/symbian.cpp \
-	build/s60v3/bld.inf build/s60v3/libgc.mmp \
-	extra/Mac_files/datastart.c extra/Mac_files/dataend.c \
-	extra/Mac_files/MacOS_config.h include/private/msvc_dbg.h \
-	extra/msvc_dbg.c tools/callprocs.sh cord/tests/de.c \
-	cord/tests/de_cmds.h cord/tests/de_win.c cord/tests/de_win.h \
-	cord/tests/de_win.rc
+	extra/pcr_interface.c extra/real_malloc.c build/s60v3/bld.inf \
+	build/s60v3/libgc.mmp extra/Mac_files/datastart.c \
+	extra/Mac_files/dataend.c extra/Mac_files/MacOS_config.h \
+	include/private/msvc_dbg.h extra/msvc_dbg.c tools/callprocs.sh \
+	cord/tests/de.c cord/tests/de_cmds.h cord/tests/de_win.c \
+	cord/tests/de_win.h cord/tests/de_win.rc
 
 # C Library
 # ---------
-lib_LTLIBRARIES = libgc.la $(am__append_10) libcord.la
+lib_LTLIBRARIES = libgc.la $(am__append_13) libcord.la
 
 # unprefixed header
-include_HEADERS = $(am__append_12) include/extra/gc.h
+include_HEADERS = $(am__append_15) include/extra/gc.h
 
 # installed headers
 #
-pkginclude_HEADERS = $(am__append_11) include/gc.h \
-	include/gc_allocator.h include/gc_backptr.h \
-	include/gc_config_macros.h include/gc_disclaim.h \
+pkginclude_HEADERS = $(am__append_12) $(am__append_14) include/gc.h \
+	include/gc_backptr.h include/gc_config_macros.h \
 	include/gc_gcj.h include/gc_inline.h include/gc_mark.h \
 	include/gc_pthread_redirects.h include/gc_tiny_fl.h \
 	include/gc_typed.h include/gc_version.h include/javaxfc.h \
-	include/leak_detector.h include/weakpointer.h include/cord.h \
-	include/cord_pos.h include/ec.h
+	include/leak_detector.h include/cord.h include/cord_pos.h \
+	include/ec.h
 
 # headers which are not installed
 #
-dist_noinst_HEADERS = include/cord.h include/cord_pos.h include/ec.h \
-	include/new_gc_alloc.h include/private/darwin_semaphore.h \
+dist_noinst_HEADERS = include/gc_alloc_ptrs.h include/new_gc_alloc.h \
+	include/private/darwin_semaphore.h \
 	include/private/darwin_stop_world.h include/private/dbg_mlc.h \
-	include/private/gc_hdrs.h include/private/gc_locks.h \
-	include/private/gc_pmark.h include/private/gc_priv.h \
-	include/private/gcconfig.h include/private/msvc_dbg.h \
+	include/private/gc_atomic_ops.h include/private/gc_hdrs.h \
+	include/private/gc_locks.h include/private/gc_pmark.h \
+	include/private/gc_priv.h include/private/gcconfig.h \
+	include/private/msvc_dbg.h \
 	include/private/pthread_stop_world.h \
 	include/private/pthread_support.h include/private/specific.h \
 	include/private/thread_local_alloc.h
@@ -1017,25 +1046,26 @@ check_LTLIBRARIES = libstaticrootslib_test.la \
 TESTS = cordtest$(EXEEXT) gctest$(EXEEXT) leaktest$(EXEEXT) \
 	middletest$(EXEEXT) smashtest$(EXEEXT) hugetest$(EXEEXT) \
 	realloc_test$(EXEEXT) staticrootstest$(EXEEXT) \
-	$(am__append_14) $(am__append_16) $(am__append_18) \
-	$(am__append_20)
+	$(am__append_19) $(am__append_21) $(am__append_23) \
+	$(am__append_26)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = bdw-gc.pc
 @SINGLE_GC_OBJ_FALSE@libgc_la_SOURCES = allchblk.c alloc.c blacklst.c \
-@SINGLE_GC_OBJ_FALSE@	checksums.c dbg_mlc.c dyn_load.c \
-@SINGLE_GC_OBJ_FALSE@	finalize.c gc_dlopen.c gcj_mlc.c \
-@SINGLE_GC_OBJ_FALSE@	headers.c mach_dep.c malloc.c mallocx.c \
-@SINGLE_GC_OBJ_FALSE@	mark.c mark_rts.c misc.c new_hblk.c \
-@SINGLE_GC_OBJ_FALSE@	obj_map.c os_dep.c pcr_interface.c \
-@SINGLE_GC_OBJ_FALSE@	ptr_chck.c real_malloc.c reclaim.c \
-@SINGLE_GC_OBJ_FALSE@	specific.c stubborn.c typd_mlc.c \
-@SINGLE_GC_OBJ_FALSE@	$(am__append_4) $(am__append_5) \
-@SINGLE_GC_OBJ_FALSE@	$(am__append_6) $(am__append_7) \
-@SINGLE_GC_OBJ_FALSE@	$(am__append_8) $(am__append_9)
+@SINGLE_GC_OBJ_FALSE@	dbg_mlc.c dyn_load.c finalize.c \
+@SINGLE_GC_OBJ_FALSE@	gc_dlopen.c gcj_mlc.c headers.c \
+@SINGLE_GC_OBJ_FALSE@	mach_dep.c malloc.c mallocx.c mark.c \
+@SINGLE_GC_OBJ_FALSE@	mark_rts.c misc.c new_hblk.c obj_map.c \
+@SINGLE_GC_OBJ_FALSE@	os_dep.c ptr_chck.c reclaim.c specific.c \
+@SINGLE_GC_OBJ_FALSE@	typd_mlc.c $(am__append_4) \
+@SINGLE_GC_OBJ_FALSE@	$(am__append_5) $(am__append_6) \
+@SINGLE_GC_OBJ_FALSE@	$(am__append_7) $(am__append_8) \
+@SINGLE_GC_OBJ_FALSE@	$(am__append_9) $(am__append_10) \
+@SINGLE_GC_OBJ_FALSE@	$(am__append_11)
 @SINGLE_GC_OBJ_TRUE@libgc_la_SOURCES = extra/gc.c $(am__append_2) \
 @SINGLE_GC_OBJ_TRUE@	$(am__append_4) $(am__append_5) \
 @SINGLE_GC_OBJ_TRUE@	$(am__append_6) $(am__append_7) \
-@SINGLE_GC_OBJ_TRUE@	$(am__append_8) $(am__append_9)
+@SINGLE_GC_OBJ_TRUE@	$(am__append_8) $(am__append_9) \
+@SINGLE_GC_OBJ_TRUE@	$(am__append_10) $(am__append_11)
 @NEED_ATOMIC_OPS_ASM_TRUE@nodist_libgc_la_SOURCES = libatomic_ops/src/atomic_ops_sysdeps.S
 @USE_INTERNAL_LIBATOMIC_OPS_TRUE@nodist_libgc_la_SOURCES = libatomic_ops/src/atomic_ops.c
 
@@ -1070,7 +1100,7 @@ AM_CXXFLAGS = @GC_CFLAGS@
 # Info (current:revision:age) for the Libtool versioning system.
 # These numbers should be updated at most once just before the release,
 # and, optionally, at most once during the development (after the release).
-LIBCORD_VER_INFO = 4:2:3
+LIBCORD_VER_INFO = 5:0:4
 libcord_la_LIBADD = $(top_builddir)/libgc.la
 libcord_la_LDFLAGS = -version-info $(LIBCORD_VER_INFO) -no-undefined
 libcord_la_CPPFLAGS = $(AM_CPPFLAGS)
@@ -1080,14 +1110,14 @@ libcord_la_SOURCES = \
         cord/cordxtra.c
 
 cordtest_SOURCES = cord/tests/cordtest.c
-cordtest_LDADD = $(top_builddir)/libgc.la $(top_builddir)/libcord.la
+cordtest_LDADD = $(top_builddir)/libcord.la $(am__append_16)
 
 # Common libs to _LDADD for all tests.
 test_ldadd = $(nodist_libgc_la_OBJECTS) $(top_builddir)/libgc.la \
             $(EXTRA_TEST_LIBS)
 
 gctest_SOURCES = tests/test.c
-gctest_LDADD = $(test_ldadd) $(am__append_13)
+gctest_LDADD = $(test_ldadd) $(am__append_17)
 gctest_DEPENDENCIES = $(top_builddir)/libgc.la
 leaktest_SOURCES = tests/leak_test.c
 leaktest_LDADD = $(test_ldadd)
@@ -1101,23 +1131,22 @@ realloc_test_SOURCES = tests/realloc_test.c
 realloc_test_LDADD = $(test_ldadd)
 staticrootstest_SOURCES = tests/staticrootstest.c
 staticrootstest_CFLAGS = -DSTATICROOTSLIB2
-staticrootstest_LDADD = $(test_ldadd) libstaticrootslib_test.la \
-                        libstaticrootslib2_test.la
-
+staticrootstest_LDADD = $(nodist_libgc_la_OBJECTS) $(EXTRA_TEST_LIBS) \
+	libstaticrootslib_test.la libstaticrootslib2_test.la \
+	$(am__append_18)
 libstaticrootslib_test_la_SOURCES = tests/staticrootslib.c
 libstaticrootslib_test_la_LIBADD = $(test_ldadd)
-libstaticrootslib_test_la_LDFLAGS = -version-info 1:3:0 -no-undefined \
-                                    -rpath /nowhere
-
+libstaticrootslib_test_la_LDFLAGS = -no-undefined -rpath /nowhere
 libstaticrootslib_test_la_DEPENDENCIES = $(top_builddir)/libgc.la
 libstaticrootslib2_test_la_SOURCES = tests/staticrootslib.c
 libstaticrootslib2_test_la_LIBADD = $(test_ldadd)
 libstaticrootslib2_test_la_CFLAGS = -DSTATICROOTSLIB2
-libstaticrootslib2_test_la_LDFLAGS = -version-info 1:3:0 -no-undefined \
-                                     -rpath /nowhere
-
+libstaticrootslib2_test_la_LDFLAGS = -no-undefined -rpath /nowhere
 @KEEP_BACK_PTRS_TRUE@tracetest_SOURCES = tests/trace_test.c
 @KEEP_BACK_PTRS_TRUE@tracetest_LDADD = $(test_ldadd)
+@THREADS_TRUE@test_atomic_ops_SOURCES = tests/test_atomic_ops.c
+# Really should need only $(ATOMIC_OPS_LIBS)
+@THREADS_TRUE@test_atomic_ops_LDADD = $(test_ldadd) $(THREADDLLIBS)
 @THREADS_TRUE@threadleaktest_SOURCES = tests/thread_leak_test.c
 @THREADS_TRUE@threadleaktest_LDADD = $(test_ldadd) $(THREADDLLIBS)
 @THREADS_TRUE@threadkey_test_SOURCES = tests/threadkey_test.c
@@ -1127,13 +1156,22 @@ libstaticrootslib2_test_la_LDFLAGS = -version-info 1:3:0 -no-undefined \
 @THREADS_TRUE@initsecondarythread_test_SOURCES = tests/initsecondarythread.c
 @THREADS_TRUE@initsecondarythread_test_LDADD = $(test_ldadd) $(THREADDLLIBS)
 @CPLUSPLUS_TRUE@test_cpp_SOURCES = tests/test_cpp.cc
-@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@test_cpp_LDADD = libgccpp.la $(test_ldadd) $(CXXLIBS)
-@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@test_cpp_LDADD = gc_cpp.o $(test_ldadd) $(CXXLIBS)
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@test_cpp_LDADD = libgccpp.la \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(nodist_libgc_la_OBJECTS) \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(EXTRA_TEST_LIBS) \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(CXXLIBS) \
+@AVOID_CPP_LIB_FALSE@@CPLUSPLUS_TRUE@	$(am__append_25)
+@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@test_cpp_LDADD = gc_cpp.o \
+@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@	$(test_ldadd) $(CXXLIBS) \
+@AVOID_CPP_LIB_TRUE@@CPLUSPLUS_TRUE@	$(am__append_25)
 @ENABLE_DISCLAIM_TRUE@disclaim_test_SOURCES = tests/disclaim_test.c
 @ENABLE_DISCLAIM_TRUE@disclaim_test_LDADD = $(test_ldadd) \
-@ENABLE_DISCLAIM_TRUE@	$(am__append_22)
+@ENABLE_DISCLAIM_TRUE@	$(am__append_28)
 @ENABLE_DISCLAIM_TRUE@disclaim_bench_SOURCES = tests/disclaim_bench.c
 @ENABLE_DISCLAIM_TRUE@disclaim_bench_LDADD = $(test_ldadd)
+@ENABLE_DISCLAIM_TRUE@disclaim_weakmap_test_SOURCES = tests/disclaim_weakmap_test.c
+@ENABLE_DISCLAIM_TRUE@disclaim_weakmap_test_LDADD = $(test_ldadd) \
+@ENABLE_DISCLAIM_TRUE@	$(am__append_29)
 
 # installed documentation
 @ENABLE_DOCS_TRUE@dist_doc_DATA = \
@@ -1160,16 +1198,16 @@ libstaticrootslib2_test_la_LDFLAGS = -version-info 1:3:0 -no-undefined \
 @ENABLE_DOCS_TRUE@        doc/README.uts \
 @ENABLE_DOCS_TRUE@        doc/README.win32 \
 @ENABLE_DOCS_TRUE@        doc/README.win64 \
-@ENABLE_DOCS_TRUE@        doc/debugging.html \
-@ENABLE_DOCS_TRUE@        doc/finalization.html \
-@ENABLE_DOCS_TRUE@        doc/gcdescr.html \
-@ENABLE_DOCS_TRUE@        doc/gcinterface.html \
-@ENABLE_DOCS_TRUE@        doc/leak.html \
-@ENABLE_DOCS_TRUE@        doc/overview.html \
-@ENABLE_DOCS_TRUE@        doc/porting.html \
-@ENABLE_DOCS_TRUE@        doc/scale.html \
-@ENABLE_DOCS_TRUE@        doc/simple_example.html \
-@ENABLE_DOCS_TRUE@        doc/tree.html
+@ENABLE_DOCS_TRUE@        doc/debugging.md \
+@ENABLE_DOCS_TRUE@        doc/finalization.md \
+@ENABLE_DOCS_TRUE@        doc/gcdescr.md \
+@ENABLE_DOCS_TRUE@        doc/gcinterface.md \
+@ENABLE_DOCS_TRUE@        doc/leak.md \
+@ENABLE_DOCS_TRUE@        doc/overview.md \
+@ENABLE_DOCS_TRUE@        doc/porting.md \
+@ENABLE_DOCS_TRUE@        doc/scale.md \
+@ENABLE_DOCS_TRUE@        doc/simple_example.md \
+@ENABLE_DOCS_TRUE@        doc/tree.md
 
 @ENABLE_DOCS_TRUE@dist_man3_MANS = doc/gc.man
 all: all-recursive
@@ -1361,6 +1399,12 @@ tests/disclaim_test.$(OBJEXT): tests/$(am__dirstamp) \
 disclaim_test$(EXEEXT): $(disclaim_test_OBJECTS) $(disclaim_test_DEPENDENCIES) $(EXTRA_disclaim_test_DEPENDENCIES) 
 	@rm -f disclaim_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(disclaim_test_OBJECTS) $(disclaim_test_LDADD) $(LIBS)
+tests/disclaim_weakmap_test.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+disclaim_weakmap_test$(EXEEXT): $(disclaim_weakmap_test_OBJECTS) $(disclaim_weakmap_test_DEPENDENCIES) $(EXTRA_disclaim_weakmap_test_DEPENDENCIES) 
+	@rm -f disclaim_weakmap_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(disclaim_weakmap_test_OBJECTS) $(disclaim_weakmap_test_LDADD) $(LIBS)
 tests/test.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -1415,6 +1459,12 @@ tests/subthread_create.$(OBJEXT): tests/$(am__dirstamp) \
 subthreadcreate_test$(EXEEXT): $(subthreadcreate_test_OBJECTS) $(subthreadcreate_test_DEPENDENCIES) $(EXTRA_subthreadcreate_test_DEPENDENCIES) 
 	@rm -f subthreadcreate_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(subthreadcreate_test_OBJECTS) $(subthreadcreate_test_LDADD) $(LIBS)
+tests/test_atomic_ops.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+test_atomic_ops$(EXEEXT): $(test_atomic_ops_OBJECTS) $(test_atomic_ops_DEPENDENCIES) $(EXTRA_test_atomic_ops_DEPENDENCIES) 
+	@rm -f test_atomic_ops$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_atomic_ops_OBJECTS) $(test_atomic_ops_LDADD) $(LIBS)
 tests/test_cpp.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -1478,16 +1528,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/new_hblk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/obj_map.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os_dep.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcr_interface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pthread_start.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pthread_stop_world.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pthread_support.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ptr_chck.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/real_malloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reclaim.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sparc_mach_dep.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/specific.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stubborn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread_local_alloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/typd_mlc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/win32_threads.Plo@am__quote@
@@ -1500,6 +1547,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@libatomic_ops/src/$(DEPDIR)/atomic_ops_sysdeps.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/disclaim_bench.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/disclaim_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/disclaim_weakmap_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/huge_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/initsecondarythread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/leak_test.Po@am__quote@
@@ -1511,6 +1559,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/staticrootstest-staticrootstest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/subthread_create.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_atomic_ops.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_cpp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/thread_leak_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/threadkey_test.Po@am__quote@
@@ -2076,6 +2125,13 @@ tracetest.log: tracetest$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_atomic_ops.log: test_atomic_ops$(EXEEXT)
+	@p='test_atomic_ops$(EXEEXT)'; \
+	b='test_atomic_ops'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 threadleaktest.log: threadleaktest$(EXEEXT)
 	@p='threadleaktest$(EXEEXT)'; \
 	b='threadleaktest'; \
@@ -2121,6 +2177,13 @@ disclaim_test.log: disclaim_test$(EXEEXT)
 disclaim_bench.log: disclaim_bench$(EXEEXT)
 	@p='disclaim_bench$(EXEEXT)'; \
 	b='disclaim_bench'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+disclaim_weakmap_test.log: disclaim_weakmap_test$(EXEEXT)
+	@p='disclaim_weakmap_test$(EXEEXT)'; \
+	b='disclaim_weakmap_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2500,6 +2563,29 @@ uninstall-man: uninstall-man3
 # it will not remove dest if building fails
 .S.s:
 	if $(CPP) $< >$@ ; then :; else rm -f $@; fi
+
+# Run the tests directly (without test-driver):
+.PHONY: check-without-test-driver
+check-without-test-driver: $(TESTS)
+	./gctest$(EXEEXT)
+	./hugetest$(EXEEXT)
+	./leaktest$(EXEEXT)
+	./middletest$(EXEEXT)
+	./realloc_test$(EXEEXT)
+	./smashtest$(EXEEXT)
+	./staticrootstest$(EXEEXT)
+	test ! -f disclaim_bench$(EXEEXT) || ./disclaim_bench$(EXEEXT)
+	test ! -f disclaim_test$(EXEEXT) || ./disclaim_test$(EXEEXT)
+	test ! -f disclaim_weakmap_test$(EXEEXT) || ./disclaim_weakmap_test$(EXEEXT)
+	test ! -f initsecondarythread_test$(EXEEXT) \
+	  || ./initsecondarythread_test$(EXEEXT)
+	test ! -f test_atomic_ops$(EXEEXT) || ./test_atomic_ops$(EXEEXT)
+	test ! -f threadkey_test$(EXEEXT) || ./threadkey_test$(EXEEXT)
+	test ! -f threadleaktest$(EXEEXT) || ./threadleaktest$(EXEEXT)
+	test ! -f subthreadcreate_test$(EXEEXT) || ./subthreadcreate_test$(EXEEXT)
+	test ! -f test_cpp$(EXEEXT) || ./test_cpp$(EXEEXT)
+	test ! -f tracetest$(EXEEXT) || ./tracetest$(EXEEXT)
+	./cordtest$(EXEEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

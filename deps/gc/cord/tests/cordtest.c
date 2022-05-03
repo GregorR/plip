@@ -40,7 +40,8 @@ int count;
 
 int test_fn(char c, void * client_data)
 {
-    if (client_data != (void *)13) ABORT("bad client data");
+    if (client_data != (void *)(GC_word)13)
+        ABORT("bad client data");
     if (count < 64*1024+1) {
         if ((count & 1) == 0) {
             if (c != 'b') ABORT("bad char");
@@ -81,7 +82,8 @@ void test_basics(void)
     if (CORD_len(x) != 128*1024+1) ABORT("bad length");
 
     count = 0;
-    if (CORD_iter5(x, 64*1024-1, test_fn, CORD_NO_FN, (void *)13) == 0) {
+    if (CORD_iter5(x, 64*1024-1, test_fn, CORD_NO_FN,
+                   (void *)(GC_word)13) == 0) {
         ABORT("CORD_iter5 failed");
     }
     if (count != 64*1024 + 2) ABORT("CORD_iter5 failed");
@@ -89,7 +91,7 @@ void test_basics(void)
     count = 0;
     CORD_set_pos(p, x, 64*1024-1);
     while(CORD_pos_valid(p)) {
-        (void) test_fn(CORD_pos_fetch(p), (void *)13);
+        (void)test_fn(CORD_pos_fetch(p), (void *)(GC_word)13);
     CORD_next(p);
     }
     if (count != 64*1024 + 2) ABORT("Position based iteration failed");
@@ -113,7 +115,8 @@ void test_basics(void)
     if (CORD_len(x) != 128*1024+1) ABORT("bad length");
 
     count = 0;
-    if (CORD_iter5(x, 64*1024-1, test_fn, CORD_NO_FN, (void *)13) == 0) {
+    if (CORD_iter5(x, 64*1024-1, test_fn, CORD_NO_FN,
+                   (void *)(GC_word)13) == 0) {
         ABORT("CORD_iter5 failed");
     }
     if (count != 64*1024 + 2) ABORT("CORD_iter5 failed");
@@ -128,7 +131,7 @@ void test_basics(void)
     while(CORD_pos_valid(p)) {
         char c = CORD_pos_fetch(p);
 
-        if ((unsigned char)c != i)
+        if ((size_t)(unsigned char)c != i)
             ABORT("Traversal of function node failed");
         CORD_next(p);
         i++;
@@ -149,7 +152,7 @@ void test_extras(void)
 {
 #   define FNAME1 "cordtst1.tmp" /* short name (8+3) for portability */
 #   define FNAME2 "cordtst2.tmp"
-    register int i;
+    int i;
     CORD y = "abcdefghijklmnopqrstuvwxyz0123456789";
     CORD x = "{}";
     CORD u, w, z;
@@ -309,6 +312,11 @@ int main(void)
         printf("cordtest:\n");
 #   endif
     GC_INIT();
+#   ifndef NO_INCREMENTAL
+      GC_enable_incremental();
+#   endif
+    if (GC_get_find_leak())
+        printf("This test program is not designed for leak detection mode\n");
     test_basics();
     test_extras();
     test_printf();

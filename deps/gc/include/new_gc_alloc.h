@@ -49,42 +49,32 @@
 
 #include "gc.h"
 
-#if (__GNUC__ < 3)
-# include <stack>  // A more portable way to get stl_alloc.h .
-#else
+#if GC_GNUC_PREREQ(3, 0)
 # include <bits/stl_alloc.h>
 # ifndef __STL_BEGIN_NAMESPACE
-# define __STL_BEGIN_NAMESPACE namespace std {
-# define __STL_END_NAMESPACE };
+#   define __STL_BEGIN_NAMESPACE namespace std {
+#   define __STL_END_NAMESPACE };
 # endif
-#ifndef __STL_USE_STD_ALLOCATORS
-#define __STL_USE_STD_ALLOCATORS
-#endif
+# ifndef __STL_USE_STD_ALLOCATORS
+#   define __STL_USE_STD_ALLOCATORS
+# endif
+#else
+# include <stack>   // A more portable way to get stl_alloc.h file.
 #endif
 
 /* A hack to deal with gcc 3.1.  If you are using gcc3.1 and later,     */
 /* you should probably really use gc_allocator.h instead.               */
-#if defined (__GNUC__) && \
-    (__GNUC__ > 3 || (__GNUC__ == 3 && (__GNUC_MINOR__ >= 1)))
+#if GC_GNUC_PREREQ(3, 1)
 # define simple_alloc __simple_alloc
 #endif
 
 #include <stddef.h>
 #include <string.h>
 
-// The following need to match collector data structures.
 // We can't include gc_priv.h, since that pulls in way too much stuff.
-// This should eventually be factored out into another include file.
+#include "gc_alloc_ptrs.h"
 
-extern "C" {
-    GC_API void ** const GC_objfreelist_ptr;
-    GC_API void ** const GC_aobjfreelist_ptr;
-    GC_API void ** const GC_uobjfreelist_ptr;
-    GC_API void ** const GC_auobjfreelist_ptr;
-
-    GC_API void GC_CALL GC_incr_bytes_allocd(size_t bytes);
-    GC_API void GC_CALL GC_incr_bytes_freed(size_t bytes);
-}
+#include "gc_mark.h" // for GC_generic_malloc
 
 #define GC_generic_malloc_words_small(lw, k) \
                         GC_generic_malloc((lw) * sizeof(GC_word), k)
@@ -165,14 +155,15 @@ void * GC_aux_template<dummy>::GC_out_of_line_malloc(size_t nwords, int kind)
     if (0 == op)
         GC_ALLOCATOR_THROW_OR_ABORT();
 
+    GC_word non_gc_bytes = GC_get_non_gc_bytes();
     GC_bytes_recently_allocd += GC_uncollectable_bytes_recently_allocd;
-    GC_non_gc_bytes +=
-                GC_uncollectable_bytes_recently_allocd;
+    non_gc_bytes += GC_uncollectable_bytes_recently_allocd;
     GC_uncollectable_bytes_recently_allocd = 0;
 
     GC_bytes_recently_freed += GC_uncollectable_bytes_recently_freed;
-    GC_non_gc_bytes -= GC_uncollectable_bytes_recently_freed;
+    non_gc_bytes -= GC_uncollectable_bytes_recently_freed;
     GC_uncollectable_bytes_recently_freed = 0;
+    GC_set_non_gc_bytes(non_gc_bytes);
 
     GC_incr_bytes_allocd(GC_bytes_recently_allocd);
     GC_bytes_recently_allocd = 0;
