@@ -270,8 +270,6 @@
             return a.t - b.t;
         });
 
-        //if (!full) return;
-
         var mode = "o";
         var i;
         var mark;
@@ -307,7 +305,8 @@
                 case "nr": ins("o"); continue;
             }
             if (mark.e[0] === "x") {
-                del();
+                if (full)
+                    del();
                 continue;
             }
             mode = (mark.e==="n") ? "i" : mark.e;
