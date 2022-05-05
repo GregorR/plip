@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Gregor Richards
+ * Copyright (c) 2020-2022 Gregor Richards
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -96,12 +96,14 @@ int csc_run(int fds, CORD *into, char *const argv[]);
 int csc_runl(int fds, CORD *into, const char *arg, ...);
 
 /* Run a program with its input and output piped. Provide an fd greater than -1
- * as stdinFd to pipe input, an output fd is returned or -1 for error. If
- * stdinFd is provided, it is closed. */
-int csc_runp(int stdinFd, char *const argv[]);
+ * as stdinFd to pipe input. If stdinFd is -1, then set STDIN in fds to NOT
+ * redirect input from /dev/null. Set one or both of STDOUT or STDERR in fds to
+ * capture them. An output fd is returned, or -1 for error. If stdinFd is
+ * provided, it is closed. */
+int csc_runp(int stdinFd, int fds, char *const argv[]);
 
 /* runp with arguments directly */
-int csc_runpl(int stdinFd, const char *arg, ...);
+int csc_runpl(int stdinFd, int fds, const char *arg, ...);
 
 /* Wait for a pipeline by way of waiting for a pipe */
 bool csc_wait(int fd);

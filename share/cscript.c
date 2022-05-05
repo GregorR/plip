@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Gregor Richards
+ * Copyright (c) 2020-2022 Gregor Richards
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -486,9 +486,11 @@ int csc_runl(int fds, CORD *into, const char *arg, ...)
 }
 
 /* Run a program with its input and output piped. Provide an fd greater than -1
- * as stdinFd to pipe input, an output fd is returned or -1 for error. If
- * stdinFd is provided, it is closed. */
-int csc_runp(int stdinFd, char *const argv[])
+ * as stdinFd to pipe input. If stdinFd is -1, then set STDIN in fds to NOT
+ * redirect input from /dev/null. Set one or both of STDOUT or STDERR in fds to
+ * capture them. An output fd is returned, or -1 for error. If stdinFd is
+ * provided, it is closed. */
+int csc_runp(int stdinFd, int fds, char *const argv[])
 {
     if (csc_verbose) {
         VERBOSE("pipe");
@@ -515,6 +517,10 @@ int csc_runp(int stdinFd, char *const argv[])
     if (stdinFd >= 0) {
         cstdin = (HANDLE) _get_osfhandle(stdinFd);
 
+    } else if (fds & CSC_STDIN) {
+        // Keep regular fd
+        cstdin = GetStdHandle(STD_INPUT_HANDLE);
+
     } else {
         // Make a dead pipe for it
         HANDLE cstdinW;
@@ -524,12 +530,20 @@ int csc_runp(int stdinFd, char *const argv[])
     }
     si.hStdInput = cstdin;
 
-    // Handle the output pipe
+    // Create the output pipe
     CreatePipe(&cstdout[0], &cstdout[1], &sa, 0);
-    si.hStdOutput = cstdout[1];
 
-    // And make sure error stays as it is
-    si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    // And set it
+    if (fds & CSC_STDOUT) {
+        si.hStdOutput = cstdout[1];
+    } else {
+        si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    }
+    if (fds & CSC_STDERR) {
+        si.hStdError = cstdout[1];
+    } else {
+        si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+    }
 
     // Create the child process
     success = CreateProcess(
@@ -563,12 +577,15 @@ int csc_runp(int stdinFd, char *const argv[])
     if (cpid < 0) CRASH("fork");
     if (cpid == 0) {
         // Use the stdout pipe
-        dup2(cstdout[1], 1);
+        if (fds & CSC_STDOUT)
+            dup2(cstdout[1], 1);
+        if (fds & CSC_STDERR)
+            dup2(cstdout[1], 2);
 
         // Redirect stdin
         if (stdinFd >= 0) {
             dup2(stdinFd, 0);
-        } else {
+        } else if (!(fds & CSC_STDIN)) {
             int sinfd = open("/dev/null", O_RDONLY);
             if (sinfd < 0) CRASH("/dev/null");
             dup2(sinfd, 0);
@@ -591,7 +608,7 @@ int csc_runp(int stdinFd, char *const argv[])
 }
 
 // runp with arguments directly
-int csc_runpl(int stdinFd, const char *arg, ...)
+int csc_runpl(int stdinFd, int fds, const char *arg, ...)
 {
     va_list args;
     char *narg;
@@ -617,7 +634,7 @@ int csc_runpl(int stdinFd, const char *arg, ...)
         argv[argi] = narg ? CORD_to_char_star(narg) : NULL;
     }
 
-    return csc_runp(stdinFd, argv);
+    return csc_runp(stdinFd, fds, argv);
 }
 
 // Wait for a pipeline by way of waiting for a pipe

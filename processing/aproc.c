@@ -112,19 +112,19 @@ void *aproc(void *vat)
                 "-i", input,
                 "-f", "f32le", "-ac", "2", "-ar", "48000",
                 inter, NULL);
-            int aud2 = csc_runpl(-1,
+            int aud2 = csc_runpl(-1, CSC_STDOUT,
                 "plip-findnoise",
                 "-i", inter,
                 "-o", CORD_to_char_star(noiseFile),
                 "2", NULL);
 
 #else
-            int aud1 = csc_runpl(-1,
+            int aud1 = csc_runpl(-1, CSC_STDOUT,
                 ffmpeg,
                 "-i", input,
                 "-f", "f32le", "-ac", "2", "-ar", "48000",
                 "-", NULL);
-            int aud2 = csc_runpl(aud1,
+            int aud2 = csc_runpl(aud1, CSC_STDOUT,
                 "plip-findnoise",
                 "-o", CORD_to_char_star(noiseFile),
                 "2", NULL);
@@ -151,36 +151,36 @@ void *aproc(void *vat)
                 "-f", format, "-ac", "2", "-ar", "48000",
                 inter, NULL);
             if (noiseLearn) {
-                noiseRed = csc_runpl(-1,
+                noiseRed = csc_runpl(-1, CSC_STDOUT,
                     program,
                     "-i", inter,
                     "-l", noiseFile,
                     "2", NULL);
             } else {
-                noiseRed = csc_runpl(-1,
+                noiseRed = csc_runpl(-1, CSC_STDOUT,
                     program,
                     "-i", inter,
                     "2", NULL);
             }
 
 #else
-            int aud1 = csc_runpl(-1,
+            int aud1 = csc_runpl(-1, CSC_STDOUT,
                 ffmpeg,
                 "-i", input,
                 "-f", format, "-ac", "2", "-ar", "48000",
                 "-", NULL);
             if (noiseLearn) {
-                noiseRed = csc_runpl(aud1,
+                noiseRed = csc_runpl(aud1, CSC_STDOUT,
                     program,
                     "-l", noiseFile,
                     "2", NULL);
             } else {
-                noiseRed = csc_runpl(aud1,
+                noiseRed = csc_runpl(aud1, CSC_STDOUT,
                     program, "2", NULL);
             }
 #endif
 
-            int aud2 = csc_runpl(noiseRed,
+            int aud2 = csc_runpl(noiseRed, CSC_STDOUT,
                 ffmpeg,
                 "-f", format, "-ac", "2", "-ar", "48000", "-i", "-",
                 "-c:a", icodec,

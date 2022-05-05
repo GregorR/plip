@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     WRITE_ONE_BUFFER(cl, NULL);
 
     // And start ffmpeg
-    int silPipeFd = csc_runp(-1, cl.buf);
+    int silPipeFd = csc_runp(-1, CSC_STDERR, cl.buf);
     FILE *silPipe = fdopen(silPipeFd, "rb");
     buf[BUFSZ-1] = 0;
 
