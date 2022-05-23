@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Gregor Richards
+ * Copyright (c) 2020-2022 Gregor Richards
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -153,13 +153,11 @@ int main(int argc, char **argv)
         sts[ci] = nrepel_instantiate(48000);
         nrepel_connect_port(sts[ci], NREPEL_LATENCY, &latency);
         v = 1;
-        if (learnFile) {
+        if (learnFile)
             nrepel_connect_port(sts[ci], NREPEL_N_LEARN, &v);
-            v = 100;
-        } else {
+        else
             nrepel_connect_port(sts[ci], NREPEL_N_ADAPTIVE, &v);
-            v = 25;
-        }
+        v = 25;
         nrepel_connect_port(sts[ci], NREPEL_WHITENING, &v);
     }
 
@@ -240,6 +238,12 @@ int main(int argc, char **argv)
         free(learnOut);
         free(learnIn);
         free(learnBuf);
+
+    } else {
+        float amt = 10;
+        for (ci = 0; ci < channels; ci++)
+            nrepel_connect_port(sts[ci], NREPEL_AMOUNT, &amt);
+
     }
 
     // Prepare for the real task
